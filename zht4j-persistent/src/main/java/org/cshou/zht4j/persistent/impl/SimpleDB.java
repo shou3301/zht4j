@@ -3,7 +3,13 @@
  */
 package org.cshou.zht4j.persistent.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.RandomAccessFile;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -11,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.cshou.zht4j.persistent.entity.DBDescriptor;
+import org.cshou.zht4j.persistent.entity.DBEntity;
 import org.cshou.zht4j.persistent.entity.KeyPointer;
 import org.cshou.zht4j.persistent.intl.PersistentStorage;
 
@@ -23,16 +31,16 @@ public class SimpleDB implements PersistentStorage {
 	private static final String defaultDBFile = "simpledb/storage.db";
 	private static final long defaultFreq = 60000L;
 	
-	protected ConcurrentMap<String, Object> memCache;
+	protected ConcurrentMap<String, DBEntity> memCache;
 	protected ConcurrentMap<String, Long> lruRecord;
-	protected Map<String, KeyPointer> dbDescriptor;
+	protected DBDescriptor dbDescriptor;
 	
 	protected String dbFileName;
 	protected File dbFile;
 	
 	protected AtomicBoolean memlock;
 	
-	protected Timer timer;
+	// protected Timer timer;
 	
 	public SimpleDB () {
 		this(defaultDBFile, defaultFreq);
@@ -48,9 +56,8 @@ public class SimpleDB implements PersistentStorage {
 	
 	public SimpleDB (String dbFileName, long freq) {
 		
-		memCache = new ConcurrentHashMap<String, Object>();
+		memCache = new ConcurrentHashMap<String, DBEntity>();
 		lruRecord = new ConcurrentHashMap<String, Long>();
-		dbDescriptor = new HashMap<String, KeyPointer>();
 		
 		try {
 			dbFile = new File(dbFileName);
@@ -61,19 +68,53 @@ public class SimpleDB implements PersistentStorage {
 			e.printStackTrace();
 		}
 		
-		timer = new Timer(true);
-		timer.schedule(new PersistTask(this), 60000L, freq);
+		dbDescriptor = new DBDescriptor(dbFile);
+		
+		// Start timer after 1 min
+		// timer = new Timer(true);
+		// timer.schedule(new PersistTask(this), 60000L, freq);
 		
 		memlock = new AtomicBoolean();
 		
 	}
 	
-	public int put (String key, Object value) {
+	public int put (String key, DBEntity value) {
+		// TODO remember to check object size
+		
+		memCache.put(key, value);
+		
 		return 0;
 	}
 
-	public Object get (String key) {
-		return null;
+	public DBEntity get (String key) {
+		
+		DBEntity entity = null;
+		
+		try {
+			
+			RandomAccessFile file = new RandomAccessFile(dbFile, "r");
+			
+			long offset = dbDescriptor.getKeyOffset(key);
+			int length = dbDescriptor.getKeyLength(key);
+			
+			file.seek(offset);
+			
+			byte[] buffer = new byte[length];
+			
+			file.readFully(buffer);
+			
+			ByteArrayInputStream bis = new ByteArrayInputStream(buffer);
+			ObjectInput in = null;
+			
+			in = new ObjectInputStream(bis);
+			entity = (DBEntity) in.readObject();
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return entity;
 	}
 
 	public int remove (String key) {
@@ -94,6 +135,14 @@ public class SimpleDB implements PersistentStorage {
 	
 	private Object searchDisk (String key) {
 		return null;
+	}
+
+	public ConcurrentMap<String, DBEntity> getMemCache () {
+		return this.memCache;
+	}
+	
+	public DBDescriptor getDbDescriptor () {
+		return this.dbDescriptor;
 	}
 	
 }

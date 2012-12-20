@@ -9,20 +9,20 @@ package org.cshou.zht4j.persistent.entity;
  */
 public class KeyPointer {
 
-	private int offset;
+	private long offset;
 	private int length;
 	
 	public KeyPointer () {
 		super();
 	}
 
-	public KeyPointer (int offset, int length) {
+	public KeyPointer (long offset, int length) {
 		super();
 		this.offset = offset;
 		this.length = length;
 	}
 
-	public int getOffset() {
+	public long getOffset() {
 		return offset;
 	}
 
