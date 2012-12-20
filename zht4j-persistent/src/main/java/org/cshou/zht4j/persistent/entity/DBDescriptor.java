@@ -4,6 +4,8 @@
 package org.cshou.zht4j.persistent.entity;
 
 import java.io.File;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -15,12 +17,14 @@ public class DBDescriptor {
 
 	private File dbFile;
 	private ConcurrentMap<String, KeyPointer> dbPointers;
+	private Queue<Long> availableTable;
 	private long endOfFile;
 
 	public DBDescriptor (File dbFile) {
 		super();
 		this.dbFile = dbFile;
 		dbPointers = new ConcurrentHashMap<String, KeyPointer>();
+		availableTable = new LinkedList<Long>();
 		endOfFile = 0L;
 	}
 
@@ -36,10 +40,6 @@ public class DBDescriptor {
 		return dbPointers;
 	}
 
-	public void setDbPointers (ConcurrentMap<String, KeyPointer> dbPointers) {
-		this.dbPointers = dbPointers;
-	}
-
 	public long getEndOfFile () {
 		return endOfFile;
 	}
@@ -48,12 +48,28 @@ public class DBDescriptor {
 		this.endOfFile = endOfFile;
 	}
 	
+	public void removePointer (String key) {
+		this.dbPointers.remove(key);
+	}
+	
 	public long getKeyOffset (String key) {
 		return dbPointers.get(key).getOffset();
 	}
 	
 	public int getKeyLength (String key) {
 		return dbPointers.get(key).getLength();
+	}
+	
+	public void pushSlot (long offset) {
+		availableTable.add(offset);
+	}
+	
+	public long getNextSlot () {
+		if (!availableTable.isEmpty()) {
+			return availableTable.poll();
+		}
+		else
+			return -1;
 	}
 
 }

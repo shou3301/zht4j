@@ -10,7 +10,7 @@ public class SimpleDBTest {
 	public void testPut() {
 		
 		SimpleDB db = new SimpleDB();
-		PersistTask pt = new PersistTask(db);
+		PersistTask pt = PersistTask.getPersistTask(db);
 		
 		FakeEntity fe1 = new FakeEntity("some data 1");
 		FakeEntity fe2 = new FakeEntity("some data 2");
@@ -18,7 +18,7 @@ public class SimpleDBTest {
 		FakeEntity fe4 = new FakeEntity("some data 4");
 		FakeEntity fe5 = new FakeEntity("some data 2 again");
 		
-		db.put("fe1", fe1);
+		db.put("fe1", null);
 		db.put("fe2", fe2);
 		db.put("fe3", fe3);
 		db.put("fe4", fe4);

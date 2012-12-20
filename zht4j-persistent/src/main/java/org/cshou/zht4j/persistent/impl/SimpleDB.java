@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.cshou.zht4j.persistent.entity.DBDescriptor;
 import org.cshou.zht4j.persistent.entity.DBEntity;
+import org.cshou.zht4j.persistent.entity.EmptyEntity;
 import org.cshou.zht4j.persistent.entity.KeyPointer;
 import org.cshou.zht4j.persistent.intl.PersistentStorage;
 
@@ -29,7 +30,7 @@ import org.cshou.zht4j.persistent.intl.PersistentStorage;
 public class SimpleDB implements PersistentStorage {
 	
 	private static final String defaultDBFile = "simpledb/storage.db";
-	private static final long defaultFreq = 60000L;
+	private static final long defaultFreq = 600000L;
 	
 	protected ConcurrentMap<String, DBEntity> memCache;
 	protected ConcurrentMap<String, Long> lruRecord;
@@ -70,23 +71,68 @@ public class SimpleDB implements PersistentStorage {
 		
 		dbDescriptor = new DBDescriptor(dbFile);
 		
-		// Start timer after 1 min
 		// timer = new Timer(true);
-		// timer.schedule(new PersistTask(this), 60000L, freq);
+		// timer.schedule(PersistTask.getPersistTask(this), freq, freq);
 		
 		memlock = new AtomicBoolean();
 		
 	}
 	
 	public int put (String key, DBEntity value) {
-		// TODO remember to check object size
 		
-		memCache.put(key, value);
+		// TODO lock when cleaning the cache
+		
+		if (value != null)
+			memCache.put(key, value);
+		else
+			memCache.put(key, new EmptyEntity());
+		
+		// TODO if consume too much memory, clean it
 		
 		return 0;
 	}
 
 	public DBEntity get (String key) {
+		
+		DBEntity entity = searchMem(key);
+		
+		if (entity == null)
+			entity = searchDisk(key);
+		
+		return entity;
+	}
+
+	public int remove (String key) {
+		
+		// TODO lock, when cleaning the cache
+		
+		put(key, null);
+		
+		return 0;
+	}
+	
+	public int getSize() {
+		return memCache.size();
+	}
+
+	private int cleanCache () {
+		return 0;
+	}
+	
+	private DBEntity searchMem (String key) {
+		
+		DBEntity entity = null;
+		
+		if (memCache.containsKey(key)) {
+			entity = memCache.get(key);
+			if (entity instanceof EmptyEntity)
+				entity = null;
+		}
+		
+		return entity;
+	}
+	
+	private DBEntity searchDisk (String key) {
 		
 		DBEntity entity = null;
 		
@@ -109,32 +155,13 @@ public class SimpleDB implements PersistentStorage {
 			in = new ObjectInputStream(bis);
 			entity = (DBEntity) in.readObject();
 			
+			file.close();
+			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		return entity;
-	}
-
-	public int remove (String key) {
-		return 0;
-	}
-	
-	public int getSize() {
-		return 0;
-	}
-
-	private int cleanCache () {
-		return 0;
-	}
-	
-	private Object searchMen (String key) {
-		return null;
-	}
-	
-	private Object searchDisk (String key) {
-		return null;
 	}
 
 	public ConcurrentMap<String, DBEntity> getMemCache () {
