@@ -110,7 +110,8 @@ public class SimpleDB implements PersistentStorage {
 		if (getSize() > capacity && !cleanlock.get()) {
 			cleanlock.set(true);
 			cleanCache();
-			cleanlock.set(false);
+			// should not set lock back here
+			// cleanlock.set(false);
 		}
 		
 		return 0;
@@ -159,8 +160,8 @@ public class SimpleDB implements PersistentStorage {
 		
 		new CleanMemTask(this, start).run();
 		
-		// TODO unlock cache
-		memlock.set(false);
+		// should not unlock here
+		// memlock.set(false);
 		
 		return 0;
 	}
@@ -224,6 +225,14 @@ public class SimpleDB implements PersistentStorage {
 	
 	public DBDescriptor getDbDescriptor () {
 		return this.dbDescriptor;
+	}
+	
+	public void setMemLock (boolean flag) {
+		this.memlock.set(flag);
+	}
+	
+	public void setCleanLock (boolean flag) {
+		this.cleanlock.set(flag);
 	}
 	
 }

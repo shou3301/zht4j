@@ -41,6 +41,22 @@ public class CleanMemTask extends Thread {
 	@Override
 	public void run () {
 		
+		/*
+		 * This sleep is important.
+		 * Since put operation itself is not synchronized,
+		 * there are might be unfinished put operations left
+		 * even when the cache lock is set.
+		 * So the sleep here is let all put operations finished and
+		 * then begin to do the cleaning.
+		 * Notice: this value is going to compromise the performance
+		 * and I don't know what value is proper
+		 */
+		try {
+			sleep(500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		ConcurrentMap<String, DBEntity> memCache = simpleDB.getMemCache();
 		ConcurrentMap<String, TimeRecord> lru = simpleDB.getLruRecord();
 		
@@ -63,6 +79,9 @@ public class CleanMemTask extends Thread {
 				lru.remove(tr.getKey());
 		}
 		
+		// have to set lock back here
+		simpleDB.setMemLock(false);
+		simpleDB.setCleanLock(false);
 	}
 	
 }
