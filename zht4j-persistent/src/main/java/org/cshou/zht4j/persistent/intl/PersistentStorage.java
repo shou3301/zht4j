@@ -15,5 +15,6 @@ public interface PersistentStorage {
 	public DBEntity get (String key);
 	public int remove (String key);
 	public int getSize ();
+	public int getCapacity ();
 	
 }
