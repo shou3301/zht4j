@@ -123,11 +123,11 @@ public class SimpleDB implements PersistentStorage {
 		
 		DBEntity entity = null;
 		
-		if (memCache.containsKey(key)) {
+		/*if (memCache.containsKey(key)) {
 			entity = memCache.get(key);
 			if (entity instanceof EmptyEntity)
 				entity = null;
-		}
+		}*/
 		
 		return entity;
 	}

@@ -129,8 +129,9 @@ public class PersistTask extends TimerTask {
 				else {
 					
 					if (dbPointers.containsKey(key)) {
+						long tempOffset = dbDescriptor.getKeyOffset(key);
 						dbDescriptor.removePointer(key);
-						dbDescriptor.pushSlot(dbDescriptor.getKeyOffset(key));
+						dbDescriptor.pushSlot(tempOffset);
 						simpleDB.getMemCache().remove(key);
 					}
 					
