@@ -23,7 +23,7 @@ public class TimeRecord implements Comparable {
 		
 		if (this.time > other.getTime())
 			return 1;
-		else if (this.time > other.getTime())
+		else if (this.time < other.getTime())
 			return -1;
 		
 		return 0;
@@ -35,6 +35,11 @@ public class TimeRecord implements Comparable {
 	
 	public String getKey () {
 		return this.key;
+	}
+	
+	@Override
+	public String toString () {
+		return "[key: " + key + "][timestamp: " + time + "]";
 	}
 	
 }

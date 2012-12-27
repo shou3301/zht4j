@@ -52,10 +52,15 @@ public class CleanMemTask extends Thread {
 		 * and I don't know what value is proper
 		 */
 		try {
-			sleep(500);
+			// change it to bigger for test
+			// to see if the lock works
+			sleep(5000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		
+		// for test
+		System.out.println("Begin clean cache...");
 		
 		ConcurrentMap<String, DBEntity> memCache = simpleDB.getMemCache();
 		ConcurrentMap<String, TimeRecord> lru = simpleDB.getLruRecord();
@@ -72,9 +77,14 @@ public class CleanMemTask extends Thread {
 				break;
 			
 			TimeRecord tr = priority.poll();
+			System.out.println("Remove candidate: " + tr);
 			if (memCache.containsKey(tr.getKey()) && tr.getTime() < startTime) {
 				memCache.remove(tr.getKey());
 				lru.remove(tr.getKey());
+				
+				// for test
+				System.out.println("Remove key = " + tr.getKey());
+				
 			} else if (!memCache.containsKey(tr.getKey()))
 				lru.remove(tr.getKey());
 		}

@@ -104,6 +104,10 @@ public class SimpleDB implements PersistentStorage {
 		
 		lruRecord.put(key, new TimeRecord(new Date().getTime(), key));
 		
+		// for test
+		System.out.println("Cache: " + memCache.keySet());
+		System.out.println("LRU: " + lruRecord);
+		
 		/* there is a lock means a clean task is undergoing,
 		 * don't double clean task
 		 * */
@@ -119,10 +123,21 @@ public class SimpleDB implements PersistentStorage {
 
 	public DBEntity get (String key) {
 		
+		boolean inCache = true;
+		
 		DBEntity entity = searchMem(key);
 		
-		if (entity == null)
+		if (entity == null) {
 			entity = searchDisk(key);
+			inCache = false;
+		}
+		
+		if (!inCache) {
+			memCache.put(key, entity);
+		}
+		
+		// for test
+		System.out.println(memCache.keySet());
 		
 		return entity;
 	}
@@ -176,6 +191,9 @@ public class SimpleDB implements PersistentStorage {
 				entity = null;
 		}
 		
+		// for test
+		System.out.println("Get object from mem cache = " + entity);
+		
 		return entity;
 	}
 	
@@ -207,6 +225,9 @@ public class SimpleDB implements PersistentStorage {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		// for test
+		System.out.println("Get object from disk = " + entity);
 		
 		return entity;
 	}
