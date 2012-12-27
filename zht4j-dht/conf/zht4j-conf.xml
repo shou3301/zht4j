@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Property>
+		<Name>zht4j.persist.frequence</Name>
+		<Value>600000</Value>
+	</Property>
+	<Property>
+		<Name>zht4j.persist.storage</Name>
+		<Value>simpledb/storage.db</Value>
+	</Property>
+	<Property>
+		<Name>zht4j.persist.capacity</Name>
+		<Value>12800</Value>
+	</Property>
+	<Property>
+		<Name>zht4j.dht.replica</Name>
+		<Value>0</Value>
+	</Property>
+	<Property>
+		<Name>zht4j.dht.size</Name>
+		<Value>1000</Value>
+	</Property>
+</Configuration>

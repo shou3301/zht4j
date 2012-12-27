@@ -47,7 +47,7 @@ public class SimpleDB implements PersistentStorage {
 	protected AtomicBoolean memlock;
 	protected AtomicBoolean cleanlock;
 	
-	// protected Timer timer;
+	protected Timer timer;
 	
 	public SimpleDB () {
 		this(defaultDBFile, defaultFreq, defaultCapacity);
@@ -83,8 +83,8 @@ public class SimpleDB implements PersistentStorage {
 		
 		dbDescriptor = new DBDescriptor(dbFile);
 		
-		// timer = new Timer(true);
-		// timer.schedule(PersistTask.getPersistTask(this), freq, freq);
+		timer = new Timer(true);
+		timer.schedule(PersistTask.getPersistTask(this), freq, freq);
 		
 		memlock = new AtomicBoolean();
 		cleanlock = new AtomicBoolean();
@@ -105,8 +105,8 @@ public class SimpleDB implements PersistentStorage {
 		lruRecord.put(key, new TimeRecord(new Date().getTime(), key));
 		
 		// for test
-		System.out.println("Cache: " + memCache.keySet());
-		System.out.println("LRU: " + lruRecord);
+		// System.out.println("Cache: " + memCache.keySet());
+		// System.out.println("LRU: " + lruRecord);
 		
 		/* there is a lock means a clean task is undergoing,
 		 * don't double clean task
@@ -137,7 +137,7 @@ public class SimpleDB implements PersistentStorage {
 		}
 		
 		// for test
-		System.out.println(memCache.keySet());
+		// System.out.println(memCache.keySet());
 		
 		return entity;
 	}
@@ -192,7 +192,7 @@ public class SimpleDB implements PersistentStorage {
 		}
 		
 		// for test
-		System.out.println("Get object from mem cache = " + entity);
+		// System.out.println("Get object from mem cache = " + entity);
 		
 		return entity;
 	}
@@ -227,7 +227,7 @@ public class SimpleDB implements PersistentStorage {
 		}
 		
 		// for test
-		System.out.println("Get object from disk = " + entity);
+		// System.out.println("Get object from disk = " + entity);
 		
 		return entity;
 	}
