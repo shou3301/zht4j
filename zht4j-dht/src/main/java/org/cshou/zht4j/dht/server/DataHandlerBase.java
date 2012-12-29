@@ -9,8 +9,10 @@ import java.rmi.server.UnicastRemoteObject;
 
 import org.cshou.zht4j.dht.entity.DataWrapper;
 import org.cshou.zht4j.dht.entity.StoreStrategy;
-import org.cshou.zht4j.intl.DataHandler;
-import org.cshou.zht4j.intl.ZhtServer;
+import org.cshou.zht4j.dht.entity.ZhtEntity;
+import org.cshou.zht4j.dht.intl.DataHandler;
+import org.cshou.zht4j.dht.intl.ObjectContext;
+import org.cshou.zht4j.dht.intl.ZhtServer;
 
 /**
  * @author cshou
@@ -18,6 +20,8 @@ import org.cshou.zht4j.intl.ZhtServer;
  */
 public class DataHandlerBase extends UnicastRemoteObject implements DataHandler {
 
+	private static final long serialVersionUID = -3490728284441110204L;
+	
 	private ZhtServer server;
 	
 	public DataHandlerBase(int port, ZhtServer server) throws RemoteException {
@@ -29,6 +33,7 @@ public class DataHandlerBase extends UnicastRemoteObject implements DataHandler 
 			throws RemoteException, NotBoundException {
 		
 		// TODO invoke server
+		server.put(object.getKey(), object.getObject(), strategy);
 		
 		return 0;
 	}
@@ -39,6 +44,39 @@ public class DataHandlerBase extends UnicastRemoteObject implements DataHandler 
 		// TODO invoke server
 		
 		return 0;
+	}
+
+	public Object getObject (String key) throws RemoteException,
+			NotBoundException {
+		
+		ZhtEntity entity = server.get(key);
+		
+		if (entity == null)
+			return null;
+		
+		return entity.getObject();
+	}
+
+	public int receiveObject (DataWrapper object, ObjectContext context,
+			StoreStrategy strategy) throws RemoteException, NotBoundException {
+		
+		server.put(object.getKey(), object.getObject(), context, strategy);
+		
+		return 0;
+	}
+
+	public Object getObject (String key, ObjectContext context)
+			throws RemoteException, NotBoundException {
+		
+		ZhtEntity entity = server.get(key);
+		
+		if (entity == null)
+			return null;
+		
+		context = entity.getContext();
+		
+		return entity.getObject();
+
 	}
 
 }

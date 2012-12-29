@@ -50,6 +50,9 @@ public class SimpleDB implements PersistentStorage {
 	protected Timer timer;
 	
 	public SimpleDB () {
+		
+		// for test comment
+		
 		this(defaultDBFile, defaultFreq, defaultCapacity);
 	}
 	
