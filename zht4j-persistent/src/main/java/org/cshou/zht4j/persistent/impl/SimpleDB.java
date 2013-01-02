@@ -1,28 +1,24 @@
 /**
- * 
+ * TODO
+ * need major improvement here
+ * change lru to concurrent linked queue
  */
 package org.cshou.zht4j.persistent.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.RandomAccessFile;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.cshou.zht4j.persistent.entity.DBDescriptor;
 import org.cshou.zht4j.persistent.entity.DBEntity;
 import org.cshou.zht4j.persistent.entity.EmptyEntity;
-import org.cshou.zht4j.persistent.entity.KeyPointer;
-import org.cshou.zht4j.persistent.entity.TimeRecord;
 import org.cshou.zht4j.persistent.intl.PersistentStorage;
 
 /**
@@ -36,7 +32,8 @@ public class SimpleDB implements PersistentStorage {
 	private static final int defaultCapacity = 12800;
 	
 	protected ConcurrentMap<String, DBEntity> memCache;
-	protected ConcurrentMap<String, TimeRecord> lruRecord;
+	protected ConcurrentLinkedQueue<String> lru;
+	
 	protected DBDescriptor dbDescriptor;
 	
 	protected String dbFileName;
@@ -73,7 +70,7 @@ public class SimpleDB implements PersistentStorage {
 		this.capacity = capacity;
 		
 		memCache = new ConcurrentHashMap<String, DBEntity>();
-		lruRecord = new ConcurrentHashMap<String, TimeRecord>();
+		lru = new ConcurrentLinkedQueue<String>();
 		
 		try {
 			dbFile = new File(dbFileName);
@@ -100,12 +97,16 @@ public class SimpleDB implements PersistentStorage {
 			// wait for cache lock
 		}
 		
-		if (value != null)
-			memCache.put(key, value);
-		else
-			memCache.put(key, new EmptyEntity());
+		synchronized (this) {
 		
-		lruRecord.put(key, new TimeRecord(new Date().getTime(), key));
+			if (value != null)
+				memCache.put(key, value);
+			else
+				memCache.put(key, new EmptyEntity());
+			
+			lru.add(key);
+		
+		}
 		
 		// for test
 		// System.out.println("Cache: " + memCache.keySet());
@@ -136,7 +137,13 @@ public class SimpleDB implements PersistentStorage {
 		}
 		
 		if (!inCache) {
-			memCache.put(key, entity);
+			
+			synchronized (this) {
+			
+				memCache.put(key, entity);
+				lru.add(key);
+			
+			}
 		}
 		
 		// for test
@@ -167,19 +174,10 @@ public class SimpleDB implements PersistentStorage {
 	 */
 	private int cleanCache () {
 		
-		// TODO have a record of starting time
-		long start = new Date().getTime();
-		
 		// TODO begin persist task
 		PersistTask.getPersistTask(this).run();
 		
-		// TODO lock and clean cache
-		memlock.set(true);
-		
-		new CleanMemTask(this, start).run();
-		
-		// should not unlock here
-		// memlock.set(false);
+		new CleanMemTask(this).run();
 		
 		return 0;
 	}
@@ -243,8 +241,8 @@ public class SimpleDB implements PersistentStorage {
 		return this.memCache;
 	}
 	
-	public ConcurrentMap<String, TimeRecord> getLruRecord () {
-		return this.lruRecord;
+	public ConcurrentLinkedQueue<String> getLru () {
+		return this.lru;
 	}
 	
 	public DBDescriptor getDbDescriptor () {

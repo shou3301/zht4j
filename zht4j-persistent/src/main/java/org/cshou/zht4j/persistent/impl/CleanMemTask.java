@@ -19,10 +19,10 @@ package org.cshou.zht4j.persistent.impl;
 
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
 import org.cshou.zht4j.persistent.entity.DBEntity;
-import org.cshou.zht4j.persistent.entity.TimeRecord;
 
 /**
  * @author cshou
@@ -31,11 +31,9 @@ import org.cshou.zht4j.persistent.entity.TimeRecord;
 public class CleanMemTask extends Thread {
 	
 	private SimpleDB simpleDB;
-	private long startTime;
 	
-	public CleanMemTask (SimpleDB simpleDB, long startTime) {
+	public CleanMemTask (SimpleDB simpleDB) {
 		this.simpleDB = simpleDB;
-		this.startTime = startTime;
 	}
 	
 	@Override
@@ -51,46 +49,29 @@ public class CleanMemTask extends Thread {
 		 * Notice: this value is going to compromise the performance
 		 * and I don't know what value is proper
 		 */
-		try {
+		/*try {
 			// change it to bigger for test
 			// to see if the lock works
 			sleep(500);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 		// for test
 		// System.out.println("Begin clean cache...");
 		
 		ConcurrentMap<String, DBEntity> memCache = simpleDB.getMemCache();
-		ConcurrentMap<String, TimeRecord> lru = simpleDB.getLruRecord();
-		
-		Queue<TimeRecord> priority = new PriorityQueue<TimeRecord>();
-		
-		for (String key : lru.keySet()) {
-			priority.add(lru.get(key));
-		}
+		ConcurrentLinkedQueue<String> lru = simpleDB.getLru();
 		
 		for (int i = 0; i < simpleDB.getCapacity() / 2; i++) {
 			
-			if (priority.isEmpty())
-				break;
+			synchronized (simpleDB) {
+				memCache.remove(lru.poll());
+			}
 			
-			TimeRecord tr = priority.poll();
-			// System.out.println("Remove candidate: " + tr);
-			if (memCache.containsKey(tr.getKey()) && tr.getTime() < startTime) {
-				memCache.remove(tr.getKey());
-				lru.remove(tr.getKey());
-				
-				// for test
-				// System.out.println("Remove key = " + tr.getKey());
-				
-			} else if (!memCache.containsKey(tr.getKey()))
-				lru.remove(tr.getKey());
 		}
 		
 		// have to set lock back here
-		simpleDB.setMemLock(false);
 		simpleDB.setCleanLock(false);
 	}
 	
