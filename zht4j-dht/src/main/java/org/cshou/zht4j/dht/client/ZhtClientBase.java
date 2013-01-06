@@ -4,6 +4,7 @@
 package org.cshou.zht4j.dht.client;
 
 import java.rmi.NotBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -26,56 +27,46 @@ public class ZhtClientBase implements ZhtClient {
 	private static final String DATA_SERVICE_NAME = "-data";
 
 	protected ZhtConf conf = null;
+	protected MembershipManager memberManager = null;
 
 	public ZhtClientBase() {
-		// TODO uncomment when not testing
-		// conf = ZhtConf.getZhtConf();
+		
+		try {
+			conf = ZhtConf.getZhtConf();
+			memberManager = MembershipManager.getMemberManager();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	public int put(String key, Object object) {
 
-		// test
+		int res = 1;
+		
 		try {
+			
+			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", "192.168.2.4" + DATA_SERVICE_NAME);
 
-			// for test only
-			Registry svcReg = LocateRegistry.getRegistry("192.168.1.19",
-					REG_PORT);
-			DataHandler dataHandler = (DataHandler) svcReg
-					.lookup("Chens-MacBook-Pro.local" + DATA_SERVICE_NAME);
-
-			int res = dataHandler.receiveObject(new DataWrapper(key, object),
+			res = dataHandler.receiveObject(new DataWrapper(key, object),
 					new StoreStrategy(0));
-
-			System.out.println(res);
-
-			// TODO uncomment when not testing
-			// TODO partition based on key - map to hostname or address
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return 1;
 		}
 
-		return 0;
+		return res;
 	}
 
 	public Object get(String key) {
 
 		Object object = null;
 		
-		// test
 		try {
 
-			// for test only
-			Registry svcReg = LocateRegistry.getRegistry("192.168.1.19",
-					REG_PORT);
-			DataHandler dataHandler = (DataHandler) svcReg
-					.lookup("Chens-MacBook-Pro.local" + DATA_SERVICE_NAME);
+			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", "192.168.2.4" + DATA_SERVICE_NAME);
 
 			object = dataHandler.getObject(key);
-
-			// TODO uncomment when not testing
-			// TODO partition based on key - map to hostname or address
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -86,7 +77,25 @@ public class ZhtClientBase implements ZhtClient {
 	}
 
 	public int remove(String key) {
-		return 0;
+		
+		int res = 1;
+		
+		try {
+
+			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", "192.168.2.4" + DATA_SERVICE_NAME);
+
+			res = dataHandler.removeObject(key);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return res;
+	}
+	
+	private Remote getHandler (String hostaddress, String service) throws Exception {
+		Registry svcReg = LocateRegistry.getRegistry(hostaddress, REG_PORT);
+		return svcReg.lookup(service);
 	}
 
 	public void run() {

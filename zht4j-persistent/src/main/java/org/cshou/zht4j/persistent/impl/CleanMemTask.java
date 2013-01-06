@@ -21,8 +21,10 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.Lock;
 
 import org.cshou.zht4j.persistent.entity.DBEntity;
+import org.cshou.zht4j.persistent.entity.TimeRecord;
 
 /**
  * @author cshou
@@ -31,9 +33,11 @@ import org.cshou.zht4j.persistent.entity.DBEntity;
 public class CleanMemTask extends Thread {
 	
 	private SimpleDB simpleDB;
+	private long startTime;
 	
-	public CleanMemTask (SimpleDB simpleDB) {
+	public CleanMemTask (SimpleDB simpleDB, long startTime) {
 		this.simpleDB = simpleDB;
+		this.startTime = startTime;
 	}
 	
 	@Override
@@ -61,14 +65,20 @@ public class CleanMemTask extends Thread {
 		// System.out.println("Begin clean cache...");
 		
 		ConcurrentMap<String, DBEntity> memCache = simpleDB.getMemCache();
-		ConcurrentLinkedQueue<String> lru = simpleDB.getLru();
+		ConcurrentLinkedQueue<TimeRecord> lru = simpleDB.getLru();
+		Lock evictionLock = simpleDB.getEvictionLock();
 		
 		for (int i = 0; i < simpleDB.getCapacity() / 2; i++) {
-			
-			synchronized (simpleDB) {
-				memCache.remove(lru.poll());
+			evictionLock.lock();
+			try {
+				if (lru.peek().getTimestamp() < this.startTime)
+					memCache.remove(lru.poll().getKey());
+				else
+					break;
 			}
-			
+			finally {
+				evictionLock.unlock();
+			}
 		}
 		
 		// have to set lock back here

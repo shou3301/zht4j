@@ -20,4 +20,8 @@
 		<Name>zht4j.dht.size</Name>
 		<Value>1000</Value>
 	</Property>
+	<Property>
+		<Name>zht4j.dht.capacity</Name>
+		<Value>20</Value>
+	</Property>
 </Configuration>

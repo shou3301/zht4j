@@ -5,41 +5,33 @@ package org.cshou.zht4j.persistent.entity;
 
 /**
  * @author cshou
- *
+ * 
  */
-public class TimeRecord implements Comparable {
+public class TimeRecord {
 
-	private long time;
 	private String key;
-	
-	public TimeRecord (long time, String key) {
-		this.time = time;
+	private long timestamp;
+
+	public TimeRecord(String key, long timestamp) {
+		super();
+		this.key = key;
+		this.timestamp = timestamp;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
 		this.key = key;
 	}
-	
-	public int compareTo (Object o) {
-		
-		TimeRecord other = (TimeRecord) o;
-		
-		if (this.time > other.getTime())
-			return 1;
-		else if (this.time < other.getTime())
-			return -1;
-		
-		return 0;
+
+	public long getTimestamp() {
+		return timestamp;
 	}
-	
-	public long getTime () {
-		return this.time;
+
+	public void setTimestamp(long timestamp) {
+		this.timestamp = timestamp;
 	}
-	
-	public String getKey () {
-		return this.key;
-	}
-	
-	@Override
-	public String toString () {
-		return "[key: " + key + "][timestamp: " + time + "]";
-	}
-	
+
 }

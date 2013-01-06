@@ -38,12 +38,12 @@ public class ZhtServerBase implements ZhtServer {
 	protected String serviceName = null;
 	
 	public ZhtServerBase () throws Exception {
-		this (new SimpleDB(30000L), InetAddress.getLocalHost().getHostName());
+		this (new SimpleDB(30000L), InetAddress.getLocalHost().getHostAddress());
 		// this (new SimpleDB(), InetAddress.getLocalHost().getHostName());
 	}
 	
 	public ZhtServerBase (PersistentStorage storage) throws Exception {
-		this (storage, InetAddress.getLocalHost().getHostName());
+		this (storage, InetAddress.getLocalHost().getHostAddress());
 	}
 	
 	public ZhtServerBase (String serviceName) throws Exception {
@@ -92,7 +92,10 @@ public class ZhtServerBase implements ZhtServer {
 	}
 
 	public int remove (String key) {
-		return 0;
+		
+		int res = storage.remove(key);
+		
+		return res;
 	}
 
 }

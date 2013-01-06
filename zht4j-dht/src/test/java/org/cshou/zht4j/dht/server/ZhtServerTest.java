@@ -25,7 +25,10 @@ public class ZhtServerTest {
 		feature.add("Good developer!");
 		feature.add("Good friend!");
 		
-		client.put(key, feature);
+		int r = client.put(key, feature);
+		
+		if (r == 0)
+			System.out.println("Successfully put the object!");
 		
 		List<String> res = (List<String>) client.get(key);
 	

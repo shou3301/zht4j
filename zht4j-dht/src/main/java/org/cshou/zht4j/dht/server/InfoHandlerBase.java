@@ -15,8 +15,8 @@ import org.cshou.zht4j.dht.intl.InfoHandler;
 public class InfoHandlerBase implements InfoHandler {
 
 	public boolean isAlive() throws RemoteException, NotBoundException {
-		
-		return false;
+		// always return true to notify this node is still alive
+		return true;
 	}
 
 }

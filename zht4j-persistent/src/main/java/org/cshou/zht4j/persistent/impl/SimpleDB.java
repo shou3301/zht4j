@@ -10,15 +10,19 @@ import java.io.File;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.RandomAccessFile;
+import java.util.Date;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.cshou.zht4j.persistent.entity.DBDescriptor;
 import org.cshou.zht4j.persistent.entity.DBEntity;
 import org.cshou.zht4j.persistent.entity.EmptyEntity;
+import org.cshou.zht4j.persistent.entity.TimeRecord;
 import org.cshou.zht4j.persistent.intl.PersistentStorage;
 
 /**
@@ -32,17 +36,18 @@ public class SimpleDB implements PersistentStorage {
 	private static final int defaultCapacity = 12800;
 	
 	protected ConcurrentMap<String, DBEntity> memCache;
-	protected ConcurrentLinkedQueue<String> lru;
+	protected ConcurrentLinkedQueue<TimeRecord> lru;
 	
 	protected DBDescriptor dbDescriptor;
 	
 	protected String dbFileName;
 	protected File dbFile;
 	
-	protected int capacity;
+	protected final int capacity;
 	
 	protected AtomicBoolean memlock;
-	protected AtomicBoolean cleanlock;
+	protected AtomicBoolean cleanLock;
+	protected Lock evictionLock;
 	
 	protected Timer timer;
 	
@@ -70,7 +75,7 @@ public class SimpleDB implements PersistentStorage {
 		this.capacity = capacity;
 		
 		memCache = new ConcurrentHashMap<String, DBEntity>();
-		lru = new ConcurrentLinkedQueue<String>();
+		lru = new ConcurrentLinkedQueue<TimeRecord>();
 		
 		try {
 			dbFile = new File(dbFileName);
@@ -87,25 +92,29 @@ public class SimpleDB implements PersistentStorage {
 		timer.schedule(PersistTask.getPersistTask(this), freq, freq);
 		
 		memlock = new AtomicBoolean();
-		cleanlock = new AtomicBoolean();
+		cleanLock = new AtomicBoolean();
+		evictionLock = new ReentrantLock();
 	}
 	
 	public int put (String key, DBEntity value) {
 		
-		// TODO lock when cleaning the cache
-		while (memlock.get()) {
-			// wait for cache lock
-		}
-		
-		synchronized (this) {
+		evictionLock.lock();
+		try {
 		
 			if (value != null)
 				memCache.put(key, value);
 			else
 				memCache.put(key, new EmptyEntity());
 			
-			lru.add(key);
+			lru.add(new TimeRecord(key, new Date().getTime()));
 		
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return 1;
+		}
+		finally {
+			evictionLock.unlock();
 		}
 		
 		// for test
@@ -115,8 +124,8 @@ public class SimpleDB implements PersistentStorage {
 		/* there is a lock means a clean task is undergoing,
 		 * don't double clean task
 		 * */
-		if (getSize() > capacity && !cleanlock.get()) {
-			cleanlock.set(true);
+		if (getSize() > capacity && !cleanLock.get()) {
+			cleanLock.set(true);
 			cleanCache();
 			// should not set lock back here
 			// cleanlock.set(false);
@@ -138,11 +147,16 @@ public class SimpleDB implements PersistentStorage {
 		
 		if (!inCache) {
 			
-			synchronized (this) {
-			
+			evictionLock.lock();
+			try {
 				memCache.put(key, entity);
-				lru.add(key);
-			
+				lru.add(new TimeRecord(key, new Date().getTime()));
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			finally {
+				evictionLock.unlock();
 			}
 		}
 		
@@ -153,11 +167,6 @@ public class SimpleDB implements PersistentStorage {
 	}
 
 	public int remove (String key) {
-		
-		// TODO lock, when cleaning the cache
-		while (memlock.get()) {
-			// wait for cache lock
-		}
 		
 		put(key, new EmptyEntity());
 		
@@ -175,9 +184,11 @@ public class SimpleDB implements PersistentStorage {
 	private int cleanCache () {
 		
 		// TODO begin persist task
+		long startTime = new Date().getTime();
+		
 		PersistTask.getPersistTask(this).run();
 		
-		new CleanMemTask(this).run();
+		new CleanMemTask(this, startTime).run();
 		
 		return 0;
 	}
@@ -241,7 +252,7 @@ public class SimpleDB implements PersistentStorage {
 		return this.memCache;
 	}
 	
-	public ConcurrentLinkedQueue<String> getLru () {
+	public ConcurrentLinkedQueue<TimeRecord> getLru () {
 		return this.lru;
 	}
 	
@@ -253,8 +264,12 @@ public class SimpleDB implements PersistentStorage {
 		this.memlock.set(flag);
 	}
 	
-	public void setCleanLock (boolean flag) {
-		this.cleanlock.set(flag);
+	public synchronized void setCleanLock (boolean flag) {
+		this.cleanLock.set(flag);
+	}
+	
+	public Lock getEvictionLock () {
+		return this.evictionLock;
 	}
 	
 }

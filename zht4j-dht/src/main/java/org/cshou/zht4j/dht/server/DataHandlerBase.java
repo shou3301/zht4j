@@ -79,4 +79,11 @@ public class DataHandlerBase extends UnicastRemoteObject implements DataHandler 
 
 	}
 
+	public int removeObject (String key) throws RemoteException,
+			NotBoundException {
+		
+		return server.remove(key);
+
+	}
+
 }

@@ -16,19 +16,22 @@ import org.cshou.zht4j.dht.entity.StoreStrategy;
  */
 public interface DataHandler extends Remote {
 
-	public int receiveObject(DataWrapper object, StoreStrategy strategy)
+	public int receiveObject (DataWrapper object, StoreStrategy strategy)
 			throws RemoteException, NotBoundException;
 
-	public int receiveObject(DataWrapper object, ObjectContext context,
+	public int receiveObject (DataWrapper object, ObjectContext context,
 			StoreStrategy strategy) throws RemoteException, NotBoundException;
 
-	public int receiveReplica(DataWrapper object) throws RemoteException,
+	public int receiveReplica (DataWrapper object) throws RemoteException,
 			NotBoundException;
 
-	public Object getObject(String key) throws RemoteException,
+	public Object getObject (String key) throws RemoteException,
 			NotBoundException;
 	
-	public Object getObject(String key, ObjectContext context) throws RemoteException,
-	NotBoundException;
+	public Object getObject (String key, ObjectContext context) throws RemoteException,
+			NotBoundException;
+	
+	public int removeObject (String key) throws RemoteException,
+			NotBoundException;
 
 }

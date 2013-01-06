@@ -17,17 +17,13 @@ public class ZhtConf {
 	
 	private static Map<String, String> params;
 	
-	private ZhtConf () {
+	private ZhtConf () throws Exception {
 		params = new HashMap<String, String>();
 		initParams();
-		try {
-			loadConf();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		loadConf();
 	}
 	
-	public static synchronized ZhtConf getZhtConf () {
+	public static synchronized ZhtConf getZhtConf () throws Exception {
 		if (zhtConf == null)
 			zhtConf = new ZhtConf();
 		return zhtConf;
@@ -43,6 +39,7 @@ public class ZhtConf {
 		params.put("zht4j.persist.capacity", "");
 		params.put("zht4j.dht.replica", "");
 		params.put("zht4j.dht.size", "");
+		params.put("zht4j.dht.capacity", "");
 	}
 	
 	public String getValue (String key) {
@@ -53,6 +50,13 @@ public class ZhtConf {
 		String result = params.get("zht4j.persist.frequence");
 		if (!result.equals(""))
 			return Long.parseLong(result);
+		return 0;
+	}
+	
+	public int getZhtCapacity () {
+		String result = params.get("zht4j.dht.capacity");
+		if (!result.equals(""))
+			return Integer.parseInt(result);
 		return 0;
 	}
 	
