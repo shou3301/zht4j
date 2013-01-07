@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 
 import org.cshou.zht4j.dht.conf.ZhtConf;
+import org.cshou.zht4j.dht.core.MembershipManager;
 import org.junit.Test;
 
 public class MembershipManagerTest {

@@ -12,7 +12,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 import org.cshou.zht4j.dht.entity.DefaultContext;
-import org.cshou.zht4j.dht.entity.StoreStrategy;
+import org.cshou.zht4j.dht.entity.StorePolicy;
 import org.cshou.zht4j.dht.entity.ZhtEntity;
 import org.cshou.zht4j.dht.intl.DataHandler;
 import org.cshou.zht4j.dht.intl.InfoHandler;
@@ -69,12 +69,12 @@ public class ZhtServerBase implements ZhtServer {
 
 	}
 
-	public int put (String key, Object object, StoreStrategy strategy) {
+	public int put (String key, Object object, StorePolicy strategy) {
 		
 		return put (key, object, new DefaultContext(), strategy);
 	}
 
-	public int put (String key, Object object, ObjectContext context, StoreStrategy strategy) {
+	public int put (String key, Object object, ObjectContext context, StorePolicy strategy) {
 		
 		ZhtEntity entity = new ZhtEntity(key, object, context);
 		int res = storage.put(key, entity);

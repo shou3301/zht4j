@@ -3,7 +3,7 @@
  */
 package org.cshou.zht4j.dht.intl;
 
-import org.cshou.zht4j.dht.entity.StoreStrategy;
+import org.cshou.zht4j.dht.entity.StorePolicy;
 import org.cshou.zht4j.dht.entity.ZhtEntity;
 
 /**
@@ -12,10 +12,10 @@ import org.cshou.zht4j.dht.entity.ZhtEntity;
  */
 public interface ZhtServer extends Runnable {
 
-	public int put(String key, Object object, StoreStrategy strategy);
+	public int put(String key, Object object, StorePolicy strategy);
 
 	public int put(String key, Object object, ObjectContext context,
-			StoreStrategy strategy);
+			StorePolicy strategy);
 
 	public ZhtEntity get(String key);
 

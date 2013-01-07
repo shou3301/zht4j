@@ -8,7 +8,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 import org.cshou.zht4j.dht.entity.DataWrapper;
-import org.cshou.zht4j.dht.entity.StoreStrategy;
+import org.cshou.zht4j.dht.entity.StorePolicy;
 import org.cshou.zht4j.dht.entity.ZhtEntity;
 import org.cshou.zht4j.dht.intl.DataHandler;
 import org.cshou.zht4j.dht.intl.ObjectContext;
@@ -29,7 +29,7 @@ public class DataHandlerBase extends UnicastRemoteObject implements DataHandler 
 		this.server = server;
 	}
 
-	public int receiveObject(DataWrapper object, StoreStrategy strategy)
+	public int receiveObject(DataWrapper object, StorePolicy strategy)
 			throws RemoteException, NotBoundException {
 		
 		// TODO invoke server
@@ -58,7 +58,7 @@ public class DataHandlerBase extends UnicastRemoteObject implements DataHandler 
 	}
 
 	public int receiveObject (DataWrapper object, ObjectContext context,
-			StoreStrategy strategy) throws RemoteException, NotBoundException {
+			StorePolicy strategy) throws RemoteException, NotBoundException {
 		
 		server.put(object.getKey(), object.getObject(), context, strategy);
 		

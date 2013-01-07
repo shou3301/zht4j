@@ -8,7 +8,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import org.cshou.zht4j.dht.entity.DataWrapper;
-import org.cshou.zht4j.dht.entity.StoreStrategy;
+import org.cshou.zht4j.dht.entity.StorePolicy;
 
 /**
  * @author cshou
@@ -16,11 +16,11 @@ import org.cshou.zht4j.dht.entity.StoreStrategy;
  */
 public interface DataHandler extends Remote {
 
-	public int receiveObject (DataWrapper object, StoreStrategy strategy)
+	public int receiveObject (DataWrapper object, StorePolicy strategy)
 			throws RemoteException, NotBoundException;
 
 	public int receiveObject (DataWrapper object, ObjectContext context,
-			StoreStrategy strategy) throws RemoteException, NotBoundException;
+			StorePolicy strategy) throws RemoteException, NotBoundException;
 
 	public int receiveReplica (DataWrapper object) throws RemoteException,
 			NotBoundException;
