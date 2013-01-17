@@ -20,6 +20,8 @@ public class MembershipManager {
 	protected final int capacity;
 	protected int followerNum;
 	
+	// TODO need to add a lock to protect member list
+	
 	protected String[] members;
 	
 	protected MembershipManager () throws Exception {

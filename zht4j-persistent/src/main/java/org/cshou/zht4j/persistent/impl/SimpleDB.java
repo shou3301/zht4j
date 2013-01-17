@@ -1,7 +1,17 @@
-/**
+/*
  * TODO
- * need major improvement here
- * change lru to concurrent linked queue
+ * 
+ * 1. to modify the interface to generic
+ * 
+ * 2. currently, there is no persist record for keys,
+ * as a result, when the node breaks down, there is no way
+ * to recover from failure and still keep the original state.
+ * 
+ * One way is to create a operation log,
+ * then later, it can catch up with the process by applying
+ * operation log again.
+ * 
+ * Still need more consideration!
  */
 package org.cshou.zht4j.persistent.impl;
 
@@ -27,28 +37,69 @@ import org.cshou.zht4j.persistent.intl.PersistentStorage;
 
 /**
  * @author cshou
- *
+ * the current implementation of persistent storage
  */
 public class SimpleDB implements PersistentStorage {
 	
+	/**
+	 * the default path to save data
+	 */
 	private static final String defaultDBFile = "simpledb/storage.db";
+	
+	/**
+	 * the default frequency to execute persist task
+	 */
 	private static final long defaultFreq = 600000L;
+	
+	/**
+	 * the default capacity for the in-memory cache
+	 */
 	private static final int defaultCapacity = 12800;
 	
+	/**
+	 * the in-memory cache
+	 */
 	protected ConcurrentMap<String, DBEntity> memCache;
+	
+	/**
+	 * the list to make it a lru cache
+	 */
 	protected ConcurrentLinkedQueue<TimeRecord> lru;
 	
+	/**
+	 * the database descriptor,
+	 * which maps memory to file
+	 */
 	protected DBDescriptor dbDescriptor;
 	
+	/**
+	 * database file name
+	 */
 	protected String dbFileName;
 	protected File dbFile;
 	
+	/**
+	 * the capacity of cache
+	 */
 	protected final int capacity;
 	
-	protected AtomicBoolean memlock;
+	/**
+	 * the atomic lock to lock clean process
+	 * this guarantees that if a clean task is undergoing,
+	 * following attempts to do clean task will be skipped 
+	 */
 	protected AtomicBoolean cleanLock;
+	
+	/**
+	 * the lock to make to operation to cache and lru list
+	 * as an atomic operation
+	 * (this might compromise some performance) 
+	 */
 	protected Lock evictionLock;
 	
+	/**
+	 * the timer to invoke a persist task
+	 */
 	protected Timer timer;
 	
 	public SimpleDB () {
@@ -91,7 +142,6 @@ public class SimpleDB implements PersistentStorage {
 		timer = new Timer(true);
 		timer.schedule(PersistTask.getPersistTask(this), freq, freq);
 		
-		memlock = new AtomicBoolean();
 		cleanLock = new AtomicBoolean();
 		evictionLock = new ReentrantLock();
 	}
@@ -258,10 +308,6 @@ public class SimpleDB implements PersistentStorage {
 	
 	public DBDescriptor getDbDescriptor () {
 		return this.dbDescriptor;
-	}
-	
-	public void setMemLock (boolean flag) {
-		this.memlock.set(flag);
 	}
 	
 	public synchronized void setCleanLock (boolean flag) {

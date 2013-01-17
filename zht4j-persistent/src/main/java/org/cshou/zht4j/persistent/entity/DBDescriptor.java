@@ -11,13 +11,23 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author cshou
- * 
+ * the class to manage the db file
  */
 public class DBDescriptor {
 
 	private File dbFile;
+	
+	/**
+	 * <key, pointer to the offset in the file>
+	 */
 	private ConcurrentMap<String, KeyPointer> dbPointers;
+	
+	/**
+	 * some object might be removed,
+	 * then the space should be made good used of
+	 */
 	private Queue<Long> availableTable;
+	
 	private long endOfFile;
 
 	public DBDescriptor (File dbFile) {

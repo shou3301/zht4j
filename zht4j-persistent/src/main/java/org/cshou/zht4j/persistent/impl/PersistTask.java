@@ -40,6 +40,9 @@ import org.cshou.zht4j.persistent.entity.KeyPointer;
  */
 public class PersistTask extends TimerTask {
 	
+	/**
+	 * the default size for each object
+	 */
 	private static final long MAX_LENGTH = 16384L;
 	
 	private static PersistTask persistTask = null;
@@ -61,9 +64,13 @@ public class PersistTask extends TimerTask {
 	public synchronized void run() {
 		
 		Map<String, DBEntity> copyOfMem = new HashMap<String, DBEntity>(simpleDB.getMemCache());
+		
 		DBDescriptor dbDescriptor = simpleDB.getDbDescriptor();
+		
 		ConcurrentMap<String, KeyPointer> dbPointers = simpleDB.getDbDescriptor().getDbPointers();
+		
 		long eof = simpleDB.getDbDescriptor().getEndOfFile();
+		
 		File dbFile = simpleDB.getDbDescriptor().getDbFile();
 		
 		try {

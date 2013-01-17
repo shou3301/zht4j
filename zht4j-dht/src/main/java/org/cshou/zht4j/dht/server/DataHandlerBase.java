@@ -33,7 +33,7 @@ public class DataHandlerBase extends UnicastRemoteObject implements DataHandler 
 			throws RemoteException, NotBoundException {
 		
 		// TODO invoke server
-		server.put(object.getKey(), object.getObject(), strategy);
+		server.put(object.getKey(), object.getObject(), object.getContext(), strategy);
 		
 		return 0;
 	}
@@ -42,6 +42,7 @@ public class DataHandlerBase extends UnicastRemoteObject implements DataHandler 
 			NotBoundException {
 		
 		// TODO invoke server
+		server.put(object.getKey(), object.getObject(), object.getContext());
 		
 		return 0;
 	}

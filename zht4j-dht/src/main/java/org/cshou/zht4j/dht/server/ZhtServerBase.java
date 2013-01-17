@@ -10,12 +10,15 @@ import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.List;
 
+import org.cshou.zht4j.dht.core.ZhtLocator;
 import org.cshou.zht4j.dht.entity.DefaultContext;
 import org.cshou.zht4j.dht.entity.StorePolicy;
 import org.cshou.zht4j.dht.entity.ZhtEntity;
 import org.cshou.zht4j.dht.intl.DataHandler;
 import org.cshou.zht4j.dht.intl.InfoHandler;
+import org.cshou.zht4j.dht.intl.Locator;
 import org.cshou.zht4j.dht.intl.ObjectContext;
 import org.cshou.zht4j.dht.intl.ZhtServer;
 import org.cshou.zht4j.persistent.entity.DBEntity;
@@ -37,6 +40,8 @@ public class ZhtServerBase implements ZhtServer {
 	protected PersistentStorage storage = null;
 	protected String serviceName = null;
 	
+	protected Locator locator = null;
+	
 	public ZhtServerBase () throws Exception {
 		this (new SimpleDB(30000L), InetAddress.getLocalHost().getHostAddress());
 		// this (new SimpleDB(), InetAddress.getLocalHost().getHostName());
@@ -50,10 +55,11 @@ public class ZhtServerBase implements ZhtServer {
 		this (new SimpleDB(), serviceName);
 	}
 	
-	public ZhtServerBase (PersistentStorage storage, String serviceName) throws RemoteException {
+	public ZhtServerBase (PersistentStorage storage, String serviceName) throws Exception {
 		
 		this.storage = storage;
 		this.serviceName = serviceName;
+		this.locator = ZhtLocator.getZhtLocator();
 		
 		System.out.println(this.serviceName);
 		
@@ -68,18 +74,41 @@ public class ZhtServerBase implements ZhtServer {
 	public void run () {
 
 	}
-
-	public int put (String key, Object object, StorePolicy strategy) {
+	
+	public int put (String key, Object object, ObjectContext context) {
 		
-		return put (key, object, new DefaultContext(), strategy);
-	}
-
-	public int put (String key, Object object, ObjectContext context, StorePolicy strategy) {
+		if (context == null)
+			context = new DefaultContext();
 		
 		ZhtEntity entity = new ZhtEntity(key, object, context);
 		int res = storage.put(key, entity);
 		
+		return res;
+	}
+
+	public int put (String key, Object object, ObjectContext context, StorePolicy strategy) {
+		
+		int res = put (key, object, context);
+		
 		// TODO replicate object
+		try {
+			
+			String current = InetAddress.getLocalHost().getHostAddress();
+			
+			List<String> follower = locator.getFollowers(current);
+			
+			int reps = strategy.getNumOfReplica();
+			
+			for (int i = 0; i < follower.size() && i <= reps; i++) {
+				
+				// TODO invoke a transfer task
+				new ReplicateTask(follower.get(i), key, object, context).run();
+				
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		return res;
 	}

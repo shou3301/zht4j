@@ -36,7 +36,7 @@ public class ZhtClientBase implements ZhtClient {
 		
 		try {
 			
-			locator = new ZhtLocator();
+			locator = ZhtLocator.getZhtLocator();
 			policyFactory = new DefaultStorePolicy();
 			
 		}

@@ -5,6 +5,7 @@ package org.cshou.zht4j.dht.entity;
 
 import java.io.Serializable;
 
+import org.cshou.zht4j.dht.intl.ObjectContext;
 import org.cshou.zht4j.persistent.entity.DBEntity;
 
 /**
@@ -17,10 +18,16 @@ public class DataWrapper implements Serializable {
 	
 	private String key;
 	private Object object;
+	private ObjectContext context;
 	
 	public DataWrapper (String key, Object object) {
+		this (key, object, null);
+	}
+	
+	public DataWrapper (String key, Object object, ObjectContext context) {
 		this.key = key;
 		this.object = object;
+		this.context = context;
 	}
 
 	public String getKey () {
@@ -37,6 +44,14 @@ public class DataWrapper implements Serializable {
 
 	public void setObject (Object object) {
 		this.object = object;
+	}
+
+	public ObjectContext getContext() {
+		return context;
+	}
+
+	public void setContext(ObjectContext context) {
+		this.context = context;
 	}
 
 }

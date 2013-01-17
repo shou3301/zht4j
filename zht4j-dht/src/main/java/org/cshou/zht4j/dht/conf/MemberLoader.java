@@ -35,6 +35,8 @@ public class MemberLoader {
 			members.add(line);
 		}
 		
+		reader.close();
+		
 		return members;
 	}
 }

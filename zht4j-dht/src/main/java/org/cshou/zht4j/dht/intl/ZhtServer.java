@@ -12,10 +12,10 @@ import org.cshou.zht4j.dht.entity.ZhtEntity;
  */
 public interface ZhtServer extends Runnable {
 
-	public int put(String key, Object object, StorePolicy strategy);
-
 	public int put(String key, Object object, ObjectContext context,
 			StorePolicy strategy);
+	
+	public int put (String key, Object object, ObjectContext context);
 
 	public ZhtEntity get(String key);
 
