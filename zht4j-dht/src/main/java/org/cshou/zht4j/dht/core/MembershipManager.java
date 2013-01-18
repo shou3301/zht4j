@@ -14,6 +14,8 @@ import org.cshou.zht4j.dht.conf.ZhtConf;
  *
  */
 public class MembershipManager {
+	
+	protected static final int MIN_FOLLOWER = 5;
 
 	protected static MembershipManager memberManager = null;
 	
@@ -67,13 +69,29 @@ public class MembershipManager {
 		Collections.sort(raw);
 		members = new String[capacity];
 		
-		int gap = capacity / raw.size();
-		followerNum = capacity % (gap * (raw.size() - 1) + 1);
+		double initgap = (double) capacity / (double) raw.size();
 		
-		int begin = 0;
-		for (int i = 0; i < raw.size(); i++) {
-			members[begin] = raw.get(i);
-			begin += gap;
+		int gap = (int) Math.ceil(initgap);
+		
+		followerNum = gap + 1;
+		
+		if (followerNum < MIN_FOLLOWER)
+			followerNum = MIN_FOLLOWER;
+		
+		int start = 0;
+		int i = 0;
+		while (start < gap) {
+			int begin = start;
+			while (begin < capacity) {
+				if (i < raw.size()) {
+					members[begin] = raw.get(i);
+					begin += gap;
+					i++;
+				}
+				else
+					break;
+			}
+			start++;
 		}
 		
 	}

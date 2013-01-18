@@ -11,16 +11,13 @@ import java.rmi.registry.Registry;
 import org.cshou.zht4j.dht.entity.DataWrapper;
 import org.cshou.zht4j.dht.intl.DataHandler;
 import org.cshou.zht4j.dht.intl.ObjectContext;
+import org.cshou.zht4j.dht.util.Naming;
 
 /**
  * @author cshou
  *
  */
 public class ReplicateTask extends Thread {
-
-	private static final int REG_PORT = 6668;
-	private static final String INFO_SERVICE_NAME = "-info";
-	private static final String DATA_SERVICE_NAME = "-data";
 	
 	protected String target = null;
 	protected DataWrapper object = null;
@@ -37,8 +34,8 @@ public class ReplicateTask extends Thread {
 		
 		try {
 			
-			Registry svcReg = LocateRegistry.getRegistry(target, REG_PORT);
-			DataHandler dataHandler = (DataHandler) svcReg.lookup(target + DATA_SERVICE_NAME);
+			Registry svcReg = LocateRegistry.getRegistry(target, Naming.getRegPort());
+			DataHandler dataHandler = (DataHandler) svcReg.lookup(Naming.getDataService(target));
 			
 			dataHandler.receiveReplica(object);
 			

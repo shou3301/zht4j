@@ -22,6 +22,6 @@
 	</Property>
 	<Property>
 		<Name>zht4j.dht.capacity</Name>
-		<Value>20</Value>
+		<Value>12</Value>
 	</Property>
 </Configuration>

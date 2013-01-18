@@ -17,6 +17,7 @@ import org.cshou.zht4j.dht.intl.DataHandler;
 import org.cshou.zht4j.dht.intl.Locator;
 import org.cshou.zht4j.dht.intl.StorePolicyFactory;
 import org.cshou.zht4j.dht.intl.ZhtClient;
+import org.cshou.zht4j.dht.util.Naming;
 import org.cshou.zht4j.persistent.entity.DBEntity;
 
 /**
@@ -24,10 +25,6 @@ import org.cshou.zht4j.persistent.entity.DBEntity;
  * 
  */
 public class ZhtClientBase implements ZhtClient {
-
-	private static final int REG_PORT = 6668;
-	private static final String INFO_SERVICE_NAME = "-info";
-	private static final String DATA_SERVICE_NAME = "-data";
 
 	protected Locator locator = null;
 	protected StorePolicyFactory policyFactory = null;
@@ -70,7 +67,7 @@ public class ZhtClientBase implements ZhtClient {
 		
 		try {
 
-			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", "192.168.2.4" + DATA_SERVICE_NAME);
+			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", Naming.getDataService("192.168.2.4"));
 
 			object = dataHandler.getObject(key);
 
@@ -88,7 +85,7 @@ public class ZhtClientBase implements ZhtClient {
 		
 		try {
 
-			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", "192.168.2.4" + DATA_SERVICE_NAME);
+			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", Naming.getDataService("192.168.2.4"));
 
 			res = dataHandler.removeObject(key);
 
@@ -100,7 +97,7 @@ public class ZhtClientBase implements ZhtClient {
 	}
 	
 	private Remote getHandler (String hostaddress, String service) throws Exception {
-		Registry svcReg = LocateRegistry.getRegistry(hostaddress, REG_PORT);
+		Registry svcReg = LocateRegistry.getRegistry(hostaddress, Naming.getRegPort());
 		return svcReg.lookup(service);
 	}
 

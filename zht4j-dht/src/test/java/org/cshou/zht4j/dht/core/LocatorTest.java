@@ -15,7 +15,7 @@ public class LocatorTest {
 	public void testGetCoordinator() {
 		ZhtClient client = new ZhtClientBase();
 		
-		String key = "shouasdasdasfsafasf";
+		String key = "shouasdasdasf";
 		List<String> feature = new ArrayList<String>();
 		feature.add("Good person!");
 		feature.add("Good developer!");

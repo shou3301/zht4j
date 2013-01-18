@@ -21,6 +21,7 @@ import org.cshou.zht4j.dht.intl.InfoHandler;
 import org.cshou.zht4j.dht.intl.Locator;
 import org.cshou.zht4j.dht.intl.ObjectContext;
 import org.cshou.zht4j.dht.intl.ZhtServer;
+import org.cshou.zht4j.dht.util.Naming;
 import org.cshou.zht4j.persistent.entity.DBEntity;
 import org.cshou.zht4j.persistent.impl.SimpleDB;
 import org.cshou.zht4j.persistent.intl.PersistentStorage;
@@ -30,12 +31,6 @@ import org.cshou.zht4j.persistent.intl.PersistentStorage;
  *
  */
 public class ZhtServerBase implements ZhtServer {
-	
-	private static final int INFO_PORT = 6666;
-	private static final int DATA_PORT = 6667;
-	private static final int REG_PORT = 6668;
-	private static final String INFO_SERVICE_NAME = "-info";
-	private static final String DATA_SERVICE_NAME = "-data";
 
 	protected PersistentStorage storage = null;
 	protected String serviceName = null;
@@ -63,12 +58,12 @@ public class ZhtServerBase implements ZhtServer {
 		
 		System.out.println(this.serviceName);
 		
-		Registry svcReg = LocateRegistry.createRegistry(REG_PORT);
+		Registry svcReg = LocateRegistry.createRegistry(Naming.getRegPort());
 		
 		// InfoHandler infoHandler = new InfoHandlerBase ();
 		
-		DataHandler dataHandler = new DataHandlerBase (DATA_PORT, this);
-		svcReg.rebind(this.serviceName + DATA_SERVICE_NAME, dataHandler);
+		DataHandler dataHandler = new DataHandlerBase (Naming.getDataPort(), this);
+		svcReg.rebind(Naming.getDataService(this.serviceName), dataHandler);
 	}
 	
 	public void run () {
