@@ -1,11 +1,5 @@
-server-01
-server-02
-server-03
-server-04
-server-05
-server-06
-server-07
-server-08
-server-09
-server-10
-server-11
+service1
+service2
+service3
+service4
+service5

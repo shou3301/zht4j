@@ -6,10 +6,10 @@ import org.junit.Test;
 
 public class SimpleDBTest {
 	
-	@Test
-	public void testClean() throws Exception {
+	// @Test
+	// public void testClean() throws Exception {
 		
-		SimpleDB db = new SimpleDB(10);
+		/*SimpleDB db = new SimpleDB(10);
 		PersistTask pt = PersistTask.getPersistTask(db);
 		
 		FakeEntity fe1 = new FakeEntity("some data 1");
@@ -59,11 +59,11 @@ public class SimpleDBTest {
 		db.put("fe2", fe13);
 		db.put("fe3", fe14);
 		db.put("fe15", fe15);
-		/*db.put("fe16", fe16);
+		db.put("fe16", fe16);
 		db.put("fe17", fe17);
 		db.put("fe18", fe18);
 		db.put("fe19", fe19);
-		db.put("fe20", fe20);*/
+		db.put("fe20", fe20);
 		
 		
 		FakeEntity res1 = (FakeEntity) db.get("fe1");
@@ -71,7 +71,7 @@ public class SimpleDBTest {
 		System.out.println(res1);
 		System.out.println(res2);
 		
-		/*db.put("fe1", null);
+		db.put("fe1", null);
 		db.put("fe2", fe5);
 		db.put("fe5", fe6);
 		
@@ -82,7 +82,7 @@ public class SimpleDBTest {
 		FakeEntity res3 = (FakeEntity) db.get("fe5");
 		System.out.println(res1);
 		System.out.println(res2);
-		System.out.println(res3);*/
+		System.out.println(res3);
 		
 	}
 
@@ -124,7 +124,7 @@ public class SimpleDBTest {
 		System.out.println(res2);
 		System.out.println(res3);
 		
-	}
+	}*/
 
 	/*@Test
 	public void testGet() {

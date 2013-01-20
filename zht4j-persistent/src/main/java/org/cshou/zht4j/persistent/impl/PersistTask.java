@@ -53,6 +53,11 @@ public class PersistTask extends TimerTask {
 		this.simpleDB = simpleDB;
 	}
 	
+	// single node test
+	/*public PersistTask (SimpleDB simpleDB) {
+		this.simpleDB = simpleDB;
+	}*/
+	
 	public synchronized static PersistTask getPersistTask (SimpleDB simpleDB) {
 		if (persistTask == null) {
 			persistTask = new PersistTask(simpleDB);

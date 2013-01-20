@@ -141,6 +141,8 @@ public class SimpleDB implements PersistentStorage {
 		
 		timer = new Timer(true);
 		timer.schedule(PersistTask.getPersistTask(this), freq, freq);
+		// single node test
+		// timer.schedule(new PersistTask(this), freq, freq);
 		
 		cleanLock = new AtomicBoolean();
 		evictionLock = new ReentrantLock();
@@ -236,7 +238,10 @@ public class SimpleDB implements PersistentStorage {
 		// TODO begin persist task
 		long startTime = new Date().getTime();
 		
+		// TODO commented for test
 		PersistTask.getPersistTask(this).run();
+		// single node test
+		// new PersistTask(this).run();
 		
 		new CleanMemTask(this, startTime).run();
 		

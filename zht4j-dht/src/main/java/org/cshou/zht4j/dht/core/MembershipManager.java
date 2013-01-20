@@ -3,6 +3,7 @@
  */
 package org.cshou.zht4j.dht.core;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -75,8 +76,9 @@ public class MembershipManager {
 		
 		followerNum = gap + 1;
 		
-		if (followerNum < MIN_FOLLOWER)
-			followerNum = MIN_FOLLOWER;
+		// single node test
+		/*if (followerNum < MIN_FOLLOWER)
+			followerNum = MIN_FOLLOWER;*/
 		
 		int start = 0;
 		int i = 0;
@@ -93,6 +95,9 @@ public class MembershipManager {
 			}
 			start++;
 		}
+		
+		// single node test
+		// System.out.println("Memberlist: " + Arrays.asList(members));
 		
 	}
  

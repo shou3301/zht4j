@@ -48,11 +48,16 @@ public class ZhtClientBase implements ZhtClient {
 		int res = 1;
 		
 		try {
-			System.out.println(locator.getCoordinator(key));
-			/*DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", "192.168.2.4" + DATA_SERVICE_NAME);
+			
+			String pos = locator.getCoordinator(key);
+			
+			// single node test
+			// System.out.println("Insert location is " + pos);
+			
+			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", Naming.getDataService(pos));
 
 			res = dataHandler.receiveObject(new DataWrapper(key, object),
-					new StorePolicy(0));*/
+					new StorePolicy(2));
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -67,7 +72,12 @@ public class ZhtClientBase implements ZhtClient {
 		
 		try {
 
-			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", Naming.getDataService("192.168.2.4"));
+			String pos = locator.getCoordinator(key);
+			
+			// single node test
+			// System.out.println("Get location is " + pos);
+			
+			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", Naming.getDataService(pos));
 
 			object = dataHandler.getObject(key);
 

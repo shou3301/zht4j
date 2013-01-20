@@ -38,8 +38,8 @@ public class ZhtServerBase implements ZhtServer {
 	protected Locator locator = null;
 	
 	public ZhtServerBase () throws Exception {
-		this (new SimpleDB(30000L), InetAddress.getLocalHost().getHostAddress());
-		// this (new SimpleDB(), InetAddress.getLocalHost().getHostName());
+		// this (new SimpleDB(30000L), InetAddress.getLocalHost().getHostAddress());
+		this (new SimpleDB(), InetAddress.getLocalHost().getHostName());
 	}
 	
 	public ZhtServerBase (PersistentStorage storage) throws Exception {
@@ -56,13 +56,33 @@ public class ZhtServerBase implements ZhtServer {
 		this.serviceName = serviceName;
 		this.locator = ZhtLocator.getZhtLocator();
 		
-		System.out.println(this.serviceName);
-		
 		Registry svcReg = LocateRegistry.createRegistry(Naming.getRegPort());
 		
 		// InfoHandler infoHandler = new InfoHandlerBase ();
 		
 		DataHandler dataHandler = new DataHandlerBase (Naming.getDataPort(), this);
+		svcReg.rebind(Naming.getDataService(this.serviceName), dataHandler);
+	}
+	
+	// TODO delete
+	// constructor only for test
+	// single node test
+	public ZhtServerBase (PersistentStorage storage, String serviceName, int port) throws Exception {
+		
+		this.storage = storage;
+		this.serviceName = serviceName;
+		this.locator = ZhtLocator.getZhtLocator();
+		
+		Registry svcReg;
+		
+		if (port != 4000)
+			svcReg = LocateRegistry.getRegistry(Naming.getRegPort());
+		else
+			svcReg = LocateRegistry.createRegistry(Naming.getRegPort());
+		
+		// InfoHandler infoHandler = new InfoHandlerBase ();
+		
+		DataHandler dataHandler = new DataHandlerBase (port, this);
 		svcReg.rebind(Naming.getDataService(this.serviceName), dataHandler);
 	}
 	
@@ -76,6 +96,10 @@ public class ZhtServerBase implements ZhtServer {
 			context = new DefaultContext();
 		
 		ZhtEntity entity = new ZhtEntity(key, object, context);
+		
+		// single node test
+		// System.out.println("Inserting object on " + this.serviceName);
+		
 		int res = storage.put(key, entity);
 		
 		return res;
@@ -90,7 +114,13 @@ public class ZhtServerBase implements ZhtServer {
 			
 			String current = InetAddress.getLocalHost().getHostAddress();
 			
+			// single node test
+			// String current = this.serviceName;
+			
 			List<String> follower = locator.getFollowers(current);
+			
+			// single node test
+			// System.out.println("Followers: " + follower);
 			
 			int reps = strategy.getNumOfReplica();
 			

@@ -68,26 +68,46 @@ public class ZhtLocator implements Locator {
 
 	public List<String> getFollowers(String current) throws Exception {
 		
+		// single node test
+		// System.out.println("Current pos: " + current);
+		
 		List<String> res = new ArrayList<String>();
 		
 		String[] members = memberManager.getMembers();
 		int num = memberManager.getFollowerNum();
 		
+		// single node test
+		// System.out.println("Follower num: " + num);
+		
 		// search for current position
 		for (int i = 0; i < members.length; i++) {
-			if (members[i].equals(current)) {
+			
+			// single node test
+			/*if (members[i] != null)
+				System.out.println("Debug info: member i = " + members[i]);*/
+			
+			if (members[i] != null && members[i].equals(current)) {
 				int j = (i + 1) % capacity;
 				int count = 0;
 				while (count < num) {
+					
+					// single node test
+					// System.out.println("Debug info: member j = " + members[j]);
 					
 					if (j == i)
 						throw new Exception("Not enough nodes available");
 					
 					if (members[j] != null) {
+						
+						// single node test
+						// System.out.println("Debug info: " + members[j]);
+						
 						res.add(members[j]);
 						count++;
-						j = (j + 1) % capacity;
 					}
+					
+					j = (j + 1) % capacity;
+					
 				}
 				break;
 			}
