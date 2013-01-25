@@ -8,15 +8,15 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 import org.cshou.zht4j.dht.conf.ZhtConf;
-import org.cshou.zht4j.dht.core.DefaultStorePolicy;
-import org.cshou.zht4j.dht.core.MembershipManager;
-import org.cshou.zht4j.dht.core.ZhtLocator;
 import org.cshou.zht4j.dht.entity.DataWrapper;
 import org.cshou.zht4j.dht.entity.StorePolicy;
 import org.cshou.zht4j.dht.intl.DataHandler;
 import org.cshou.zht4j.dht.intl.Locator;
 import org.cshou.zht4j.dht.intl.StorePolicyFactory;
 import org.cshou.zht4j.dht.intl.ZhtClient;
+import org.cshou.zht4j.dht.membership.MembershipManager;
+import org.cshou.zht4j.dht.membership.ZhtLocator;
+import org.cshou.zht4j.dht.service.ZhtService;
 import org.cshou.zht4j.dht.util.Naming;
 import org.cshou.zht4j.persistent.entity.DBEntity;
 
@@ -29,11 +29,11 @@ public class ZhtClientBase implements ZhtClient {
 	protected Locator locator = null;
 	protected StorePolicyFactory policyFactory = null;
 
-	public ZhtClientBase() {
+	public ZhtClientBase(Locator locator) {
 		
 		try {
 			
-			locator = ZhtLocator.getZhtLocator();
+			this.locator = locator;
 			policyFactory = new DefaultStorePolicy();
 			
 		}
@@ -52,12 +52,12 @@ public class ZhtClientBase implements ZhtClient {
 			String pos = locator.getCoordinator(key);
 			
 			// single node test
-			// System.out.println("Insert location is " + pos);
+			System.out.println("========= debug: Insert location is " + pos);
 			
-			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", Naming.getDataService(pos));
+			DataHandler dataHandler = (DataHandler) getHandler (pos, Naming.getDataService(pos));
 
 			res = dataHandler.receiveObject(new DataWrapper(key, object),
-					new StorePolicy(2));
+					new StorePolicy(1));
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -75,9 +75,9 @@ public class ZhtClientBase implements ZhtClient {
 			String pos = locator.getCoordinator(key);
 			
 			// single node test
-			// System.out.println("Get location is " + pos);
+			System.out.println("========= debug: Get location is " + pos);
 			
-			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", Naming.getDataService(pos));
+			DataHandler dataHandler = (DataHandler) getHandler (pos, Naming.getDataService(pos));
 
 			object = dataHandler.getObject(key);
 
@@ -94,8 +94,9 @@ public class ZhtClientBase implements ZhtClient {
 		int res = 1;
 		
 		try {
-
-			DataHandler dataHandler = (DataHandler) getHandler ("192.168.2.4", Naming.getDataService("192.168.2.4"));
+			String pos = locator.getCoordinator(key);
+			
+			DataHandler dataHandler = (DataHandler) getHandler (pos, Naming.getDataService(pos));
 
 			res = dataHandler.removeObject(key);
 
@@ -112,7 +113,15 @@ public class ZhtClientBase implements ZhtClient {
 	}
 
 	public void run() {
-
+		while (!ZhtService.shutdown.get()) {
+			try {
+				synchronized (this) {
+					wait();
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

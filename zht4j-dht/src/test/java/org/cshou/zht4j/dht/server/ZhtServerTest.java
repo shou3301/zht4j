@@ -1,3 +1,4 @@
+
 package org.cshou.zht4j.dht.server;
 
 import static org.junit.Assert.*;
@@ -14,7 +15,7 @@ import org.junit.Test;
 
 public class ZhtServerTest {
 
-	@Test
+	/*@Test
 	public void testZhtServerBase() throws Exception {
 		
 		ZhtServer server = new ZhtServerBase();
@@ -74,5 +75,5 @@ public class ZhtServerTest {
 		String res = (String) client.get(key);
 		
 		System.out.println("Got result = " + res);
-	}
+	}*/
 }

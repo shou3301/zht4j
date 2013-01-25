@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class LocatorTest {
 
-	@Test
+	/*@Test
 	public void testGetCoordinator() {
 		ZhtClient client = new ZhtClientBase();
 		
@@ -23,6 +23,6 @@ public class LocatorTest {
 		
 		int r = client.put(key, feature);
 	
-	}
+	}*/
 
 }
