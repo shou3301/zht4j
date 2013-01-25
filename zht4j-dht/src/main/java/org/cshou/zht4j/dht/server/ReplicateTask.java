@@ -33,8 +33,6 @@ public class ReplicateTask extends Thread {
 	public void run () {
 		
 		try {
-			// single node test
-			// Registry svcReg = LocateRegistry.getRegistry("192.168.2.4", Naming.getRegPort());
 			Registry svcReg = LocateRegistry.getRegistry(target, Naming.getRegPort());
 			DataHandler dataHandler = (DataHandler) svcReg.lookup(Naming.getDataService(target));
 			

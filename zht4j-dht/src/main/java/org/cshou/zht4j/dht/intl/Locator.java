@@ -13,7 +13,7 @@ public interface Locator {
 	
 	public String getCoordinator (String key) throws Exception;
 	
-	public String getOriginPos (String key);
+	public String getOriginPos (String key) throws Exception;
 	
 	public List<String> getFollowers (String current) throws Exception;
 	

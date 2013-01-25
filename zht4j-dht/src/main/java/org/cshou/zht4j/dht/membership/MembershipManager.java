@@ -6,10 +6,14 @@ package org.cshou.zht4j.dht.membership;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.cshou.zht4j.dht.conf.MemberLoader;
 import org.cshou.zht4j.dht.conf.ZhtConf;
 import org.cshou.zht4j.dht.service.ZhtService;
+import org.cshou.zht4j.dht.util.TrafficLock;
 
 /**
  * @author cshou
@@ -28,6 +32,8 @@ public class MembershipManager implements Runnable {
 	
 	protected String[] members;
 	
+	protected TrafficLock memberLock;
+	
 	public MembershipManager () throws Exception {
 		
 		ZhtConf conf = ZhtConf.getZhtConf();
@@ -41,6 +47,8 @@ public class MembershipManager implements Runnable {
 		
 		// init membership
 		initMemberRing(new MemberLoader().loadMember());
+		
+		memberLock = new TrafficLock();
 		
 		// TODO register service 
 	}
@@ -107,6 +115,24 @@ public class MembershipManager implements Runnable {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public TrafficLock getMemberLock () {
+		return this.memberLock;
+	}
+	
+	public int addMember (String member) throws Exception {
+		
+		memberLock.lock(1, 2);
+		
+		try {
+			// TODO logic of adding member
+		}
+		finally {
+			memberLock.unlock(2);
+		}
+		
+		return 0;
 	}
  
 }

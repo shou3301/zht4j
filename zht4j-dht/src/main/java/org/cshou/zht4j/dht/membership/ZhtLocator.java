@@ -5,9 +5,12 @@ package org.cshou.zht4j.dht.membership;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
 
 import org.cshou.zht4j.dht.conf.ZhtConf;
 import org.cshou.zht4j.dht.intl.Locator;
+import org.cshou.zht4j.dht.util.TrafficLock;
 
 /**
  * @author cshou
@@ -20,11 +23,13 @@ public class ZhtLocator implements Locator {
 	protected final int capacity;
 	
 	protected MembershipManager memberManager;
+	protected TrafficLock memberLock;
 	protected ZhtConf conf;
 	
 	private ZhtLocator (MembershipManager memberManager) throws Exception {
 		conf = ZhtConf.getZhtConf();
 		this.memberManager = memberManager;
+		this.memberLock = memberManager.getMemberLock();
 		capacity = memberManager.getCapacity();
 	}
 	
@@ -37,14 +42,24 @@ public class ZhtLocator implements Locator {
 	public String getCoordinator(String key) throws Exception {
 		
 		int position = hash(key);
+		String res = null;
 		
-		String[] members = memberManager.getMembers();
+		memberLock.lock(1);
 		
-		while (members[position] == null) {
-			position = (++position) % capacity;
+		try {
+			String[] members = memberManager.getMembers();
+			
+			while (members[position] == null) {
+				position = (++position) % capacity;
+			}
+		
+			res = members[position];
+		}
+		finally {
+			memberLock.unlock(1);
 		}
 		
-		return members[position];
+		return res;
 	}
 	
 	// zero-hop ???
@@ -57,13 +72,21 @@ public class ZhtLocator implements Locator {
 		return position;
 	}
 
-	public String getOriginPos(String key) {
+	public String getOriginPos(String key) throws Exception {
 		
 		int position = hash(key);
+		String res = null;
+
+		memberLock.lock(1);
+		try {
+			String[] members = memberManager.getMembers();
+			res = members[position];
+		}
+		finally {
+			memberLock.unlock(1);
+		}
 		
-		String[] members = memberManager.getMembers();
-		
-		return members[position];
+		return res;
 	}
 
 	public List<String> getFollowers(String current) throws Exception {
@@ -73,44 +96,52 @@ public class ZhtLocator implements Locator {
 		
 		List<String> res = new ArrayList<String>();
 		
-		String[] members = memberManager.getMembers();
-		int num = memberManager.getFollowerNum();
+		memberLock.lock(1);
 		
-		// single node test
-		// System.out.println("Follower num: " + num);
+		try {
 		
-		// search for current position
-		for (int i = 0; i < members.length; i++) {
+			String[] members = memberManager.getMembers();
+			int num = memberManager.getFollowerNum();
 			
 			// single node test
-			//if (members[i] != null)
-				// System.out.println("Debug info: member i = " + members[i]);
+			// System.out.println("Follower num: " + num);
 			
-			if (members[i] != null && members[i].equals(current)) {
-				int j = (i + 1) % capacity;
-				int count = 0;
-				while (count < num) {
-					
-					// single node test
-					// System.out.println("Debug info: member j = " + members[j]);
-					
-					if (j == i)
-						throw new Exception("Not enough nodes available");
-					
-					if (members[j] != null) {
+			// search for current position
+			for (int i = 0; i < members.length; i++) {
+				
+				// single node test
+				//if (members[i] != null)
+					// System.out.println("Debug info: member i = " + members[i]);
+				
+				if (members[i] != null && members[i].equals(current)) {
+					int j = (i + 1) % capacity;
+					int count = 0;
+					while (count < num) {
 						
 						// single node test
-						// System.out.println("Debug info: " + members[j]);
+						// System.out.println("Debug info: member j = " + members[j]);
 						
-						res.add(members[j]);
-						count++;
+						if (j == i)
+							throw new Exception("Not enough nodes available");
+						
+						if (members[j] != null) {
+							
+							// single node test
+							// System.out.println("Debug info: " + members[j]);
+							
+							res.add(members[j]);
+							count++;
+						}
+						
+						j = (j + 1) % capacity;
+						
 					}
-					
-					j = (j + 1) % capacity;
-					
+					break;
 				}
-				break;
 			}
+		}
+		finally {
+			memberLock.unlock(1);
 		}
 		
 		return res;
