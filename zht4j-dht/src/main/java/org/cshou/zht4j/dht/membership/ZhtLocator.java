@@ -44,7 +44,7 @@ public class ZhtLocator implements Locator {
 		int position = hash(key);
 		String res = null;
 		
-		memberLock.lock(1);
+		memberLock.lockFirst();
 		
 		try {
 			String[] members = memberManager.getMembers();
@@ -56,7 +56,7 @@ public class ZhtLocator implements Locator {
 			res = members[position];
 		}
 		finally {
-			memberLock.unlock(1);
+			memberLock.unlockFirst();
 		}
 		
 		return res;
@@ -77,13 +77,13 @@ public class ZhtLocator implements Locator {
 		int position = hash(key);
 		String res = null;
 
-		memberLock.lock(1);
+		memberLock.lockFirst();
 		try {
 			String[] members = memberManager.getMembers();
 			res = members[position];
 		}
 		finally {
-			memberLock.unlock(1);
+			memberLock.unlockFirst();
 		}
 		
 		return res;
@@ -96,7 +96,7 @@ public class ZhtLocator implements Locator {
 		
 		List<String> res = new ArrayList<String>();
 		
-		memberLock.lock(1);
+		memberLock.lockFirst();
 		
 		try {
 		
@@ -141,7 +141,7 @@ public class ZhtLocator implements Locator {
 			}
 		}
 		finally {
-			memberLock.unlock(1);
+			memberLock.unlockFirst();
 		}
 		
 		return res;

@@ -13,51 +13,58 @@ public class TrafficLock {
 	private int count2;
 	
 	public TrafficLock () {
-		count1 = 0;
-		count2 = 0;
+		this.count1 = 0;
+		this.count2 = 0;
 	}
 	
-	public void lock (int index) throws InterruptedException {
+	public void lockFirst () throws InterruptedException {
 		synchronized (this) {
-			
-			if (index == 1) {
-				while (this.count2 > 0) {
-					this.wait();
-				}
-				this.count1++;
+			while (this.count2 > 0) {
+				this.wait();
 			}
-			else {
-				while (this.count1 > 0) {
-					this.wait();
-				}
-				this.count2++;
-			}
-			
-        }
+			this.count1++;
+		}
 	}
 	
-	public void lock (int index1, int index2) throws InterruptedException {
+	public void lockSecond () throws InterruptedException {
 		synchronized (this) {
-			while (this.count1 > 0 || this.count2 > 0) {
+			while (this.count1 > 0) {
 				this.wait();
 			}
 			this.count2++;
 		}
 	}
 	
-	public void unlock (int index) throws InterruptedException {
+	public void lockBoth () throws InterruptedException {
 		synchronized (this) {
-			
-			if (index == 1) {
-				this.count1--;
-				this.notifyAll();
+			while (this.count1 > 0 || this.count2 > 0) {
+				this.wait();
 			}
-			else {
-				this.count2--;
-				this.notifyAll();
-			}
-			
-        }
+			this.count1++;
+			this.count2++;
+		}
+	}
+	
+	public void unlockFirst () throws InterruptedException {
+		synchronized (this) {
+			this.count1--;
+			this.notifyAll();
+		}
+	}
+	
+	public void unlockSecond () throws InterruptedException {
+		synchronized (this) {
+			this.count2--;
+			this.notifyAll();
+		}
+	}
+	
+	public void unlockBoth () throws InterruptedException {
+		synchronized (this) {
+			this.count1--;
+			this.count2--;
+			this.notifyAll();
+		}
 	}
 	
 }

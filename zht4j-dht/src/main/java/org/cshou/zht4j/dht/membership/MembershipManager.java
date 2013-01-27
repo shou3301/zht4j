@@ -3,6 +3,10 @@
  */
 package org.cshou.zht4j.dht.membership;
 
+import java.net.InetAddress;
+import java.rmi.Remote;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -12,7 +16,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.cshou.zht4j.dht.conf.MemberLoader;
 import org.cshou.zht4j.dht.conf.ZhtConf;
+import org.cshou.zht4j.dht.intl.MembershipHandler;
 import org.cshou.zht4j.dht.service.ZhtService;
+import org.cshou.zht4j.dht.util.Naming;
 import org.cshou.zht4j.dht.util.TrafficLock;
 
 /**
@@ -22,8 +28,12 @@ import org.cshou.zht4j.dht.util.TrafficLock;
 public class MembershipManager implements Runnable {
 	
 	protected static final int MIN_FOLLOWER = 5;
+	protected static final int DEFULAT_CAP = 100;
 
 	protected static MembershipManager memberManager = null;
+	
+	protected String serviceName;
+	protected static int currentIndex; 
 	
 	protected final int capacity;
 	protected int followerNum;
@@ -35,15 +45,21 @@ public class MembershipManager implements Runnable {
 	protected TrafficLock memberLock;
 	
 	public MembershipManager () throws Exception {
+		this(InetAddress.getLocalHost().getHostName());
+	}
+	
+	public MembershipManager (String serviceName) throws Exception {
 		
 		ZhtConf conf = ZhtConf.getZhtConf();
 		
 		// init zht capacity
 		int tmp = conf.getZhtCapacity();
 		if (tmp == 0)
-			capacity = 100;
+			capacity = DEFULAT_CAP;
 		else
 			capacity = tmp;
+		
+		this.serviceName = serviceName;
 		
 		// init membership
 		initMemberRing(new MemberLoader().loadMember());
@@ -51,6 +67,9 @@ public class MembershipManager implements Runnable {
 		memberLock = new TrafficLock();
 		
 		// TODO register service 
+		Registry svcReg = LocateRegistry.createRegistry(Naming.getMemberRegPort());
+		MembershipHandler memberService = new MembershipHandlerBase(Naming.getMemberSvcPort(), this);
+		svcReg.rebind(Naming.getMemberService(this.serviceName), memberService);
 	}
 	
 	public int getCapacity () {
@@ -90,6 +109,11 @@ public class MembershipManager implements Runnable {
 			while (begin < capacity) {
 				if (i < raw.size()) {
 					members[begin] = raw.get(i);
+					
+					if (members[begin].equals(serviceName)) {
+						currentIndex = begin;
+					}
+					
 					begin += gap;
 					i++;
 				}
@@ -123,16 +147,36 @@ public class MembershipManager implements Runnable {
 	
 	public int addMember (String member) throws Exception {
 		
-		memberLock.lock(1, 2);
+		memberLock.lockBoth();
+		int res = -1;
 		
 		try {
-			// TODO logic of adding member
+			
+			int candidate = (capacity + currentIndex - 1) % capacity;
+			if (members[candidate] == null) {
+				
+				res = candidate;
+				members[candidate] = member;
+				
+				// TODO new thread to inform previous neighbor
+				int neighbor = (candidate - 1) % capacity;
+				while (members[neighbor] == null) {
+					neighbor = (neighbor - 1) % capacity;
+				}
+				new UpdateMemberTask((MembershipHandler) getHandler(members[neighbor], Naming.getMemberService(members[neighbor])),
+						candidate, member).run();
+			}
 		}
 		finally {
-			memberLock.unlock(2);
+			memberLock.unlockBoth();
 		}
 		
-		return 0;
+		return res;
+	}
+	
+	private Remote getHandler (String hostaddress, String service) throws Exception {
+		Registry svcReg = LocateRegistry.getRegistry(hostaddress, Naming.getRegPort());
+		return svcReg.lookup(service);
 	}
  
 }
