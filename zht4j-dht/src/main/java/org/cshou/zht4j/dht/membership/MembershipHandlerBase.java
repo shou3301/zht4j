@@ -26,11 +26,44 @@ public class MembershipHandlerBase extends UnicastRemoteObject implements Member
 	
 	public int addMember(String member) throws RemoteException,
 			NotBoundException {
-		return 0;
+		
+		int res = -1;
+		
+		try {
+			res = manager.addMember(member);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return res;
+		}
+		
+		return res;
 	}
 
 	public int update(int index, String member) throws RemoteException,
 			NotBoundException {
+		
+		int res = 1;
+		
+		try {
+			res = manager.updateMember(index, member);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return res;
+		}
+		
+		return 0;
+	}
+
+	public int setMemberList(String[] members) throws RemoteException,
+			NotBoundException {
+
+		try {
+			manager.updateMember(members);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 1;
+		}
+		
 		return 0;
 	}
 

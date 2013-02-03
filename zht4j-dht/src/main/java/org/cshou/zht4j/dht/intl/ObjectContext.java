@@ -11,4 +11,8 @@ import java.io.Serializable;
  */
 public abstract class ObjectContext implements Serializable {
 
+	public abstract long getVectorClock();
+	
+	public abstract void setVectorClock(long vectorClock);
+	
 }

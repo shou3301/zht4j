@@ -18,6 +18,7 @@ import org.cshou.zht4j.dht.conf.MemberLoader;
 import org.cshou.zht4j.dht.conf.ZhtConf;
 import org.cshou.zht4j.dht.intl.MembershipHandler;
 import org.cshou.zht4j.dht.service.ZhtService;
+import org.cshou.zht4j.dht.util.GlobalRegistry;
 import org.cshou.zht4j.dht.util.Naming;
 import org.cshou.zht4j.dht.util.TrafficLock;
 
@@ -37,8 +38,6 @@ public class MembershipManager implements Runnable {
 	
 	protected final int capacity;
 	protected int followerNum;
-	
-	// TODO need to add a lock to protect member list
 	
 	protected String[] members;
 	
@@ -67,7 +66,8 @@ public class MembershipManager implements Runnable {
 		memberLock = new TrafficLock();
 		
 		// TODO register service 
-		Registry svcReg = LocateRegistry.createRegistry(Naming.getMemberRegPort());
+		Registry svcReg = GlobalRegistry.getRegistry();
+		//Registry svcReg = LocateRegistry.createRegistry(Naming.getRegPort());
 		MembershipHandler memberService = new MembershipHandlerBase(Naming.getMemberSvcPort(), this);
 		svcReg.rebind(Naming.getMemberService(this.serviceName), memberService);
 	}
@@ -124,7 +124,7 @@ public class MembershipManager implements Runnable {
 		}
 		
 		// single node test
-		// System.out.println("Memberlist: " + Arrays.asList(members));
+		System.out.println("Memberlist: " + Arrays.asList(members));
 		
 	}
 
@@ -145,26 +145,56 @@ public class MembershipManager implements Runnable {
 		return this.memberLock;
 	}
 	
+	/**
+	 * @param member
+	 * @return the index on ring that the joining happens, -1 means add failed
+	 * @throws Exception
+	 */
 	public int addMember (String member) throws Exception {
 		
 		memberLock.lockBoth();
 		int res = -1;
 		
+		// for member test
+		System.out.println("Adding member[" + member + "] on " + currentIndex);
+		
 		try {
 			
 			int candidate = (capacity + currentIndex - 1) % capacity;
+			
+			// for member test
+			System.out.println("Possible position: " + candidate);
+			
 			if (members[candidate] == null) {
+				
+				int neighbor = findNeighbor();
+				
+				// for member test
+				System.out.println("Find previous neighbor: " + neighbor);
 				
 				res = candidate;
 				members[candidate] = member;
 				
-				// TODO new thread to inform previous neighbor
-				int neighbor = (candidate - 1) % capacity;
-				while (members[neighbor] == null) {
-					neighbor = (neighbor - 1) % capacity;
-				}
+				// for member test
+				System.out.println("Passing membership to new node...");
+				
+				MembershipHandler newMember = (MembershipHandler) getHandler(member, Naming.getMemberService(member));
+				int callback = newMember.setMemberList(members);
+				
+				// for member test
+				System.out.println("Finished Passing membership to new node...");
+				
+				if (callback != 0) 
+					return -1;
+						
+				// for member test
+				System.out.println("Memberlist: " + Arrays.asList(members));
+				
 				new UpdateMemberTask((MembershipHandler) getHandler(members[neighbor], Naming.getMemberService(members[neighbor])),
 						candidate, member).run();
+				
+				// for member test
+				System.out.println("Begin updating previous neighbor's membership...");
 			}
 		}
 		finally {
@@ -174,9 +204,80 @@ public class MembershipManager implements Runnable {
 		return res;
 	}
 	
+	/**
+	 * @return find the counterclockwise neighbor
+	 */
+	protected int findNeighbor () {
+		int neighbor = currentIndex - 1;
+		while (members[(capacity + neighbor) % capacity] == null) {
+			neighbor--;
+		}
+		return (capacity + neighbor) % capacity;
+	}
+	
+	public int updateMember (int index, String member) throws Exception {
+		
+		if (members[index] != null)
+			return 0;
+		
+		memberLock.lockBoth();
+		int res = 1;
+		
+		// for member test
+		System.out.println("Updaing a single new member: " + member + " at " + index);
+		
+		try {
+			
+			members[index] = member;
+			
+			int neighbor = findNeighbor();
+			
+			new UpdateMemberTask((MembershipHandler) getHandler(members[neighbor], Naming.getMemberService(members[neighbor])),
+					index, member).run();
+			
+			// for member test
+			System.out.println("Memberlist: " + Arrays.asList(members));
+			
+			res = 0;
+		}
+		finally {
+			memberLock.unlockBoth();
+		}
+		
+		return res;
+	}
+	
+	public int updateMember (String[] otherMembers) throws Exception {
+		
+		memberLock.lockBoth();
+		int res = 1;
+		
+		// for member test
+		System.out.println("Updating the whole membership...");
+		
+		try {
+			
+			for (int i = 0; i < members.length; i++) {
+				members[i] = otherMembers[i];
+			}
+			
+			// for member test
+			System.out.println("Memberlist: " + Arrays.asList(members));
+			
+			res = 0;
+		}
+		finally {
+			memberLock.unlockBoth();
+		}
+		
+		return res;
+	}
+	
 	private Remote getHandler (String hostaddress, String service) throws Exception {
+		
 		Registry svcReg = LocateRegistry.getRegistry(hostaddress, Naming.getRegPort());
 		return svcReg.lookup(service);
+		
 	}
  
 }

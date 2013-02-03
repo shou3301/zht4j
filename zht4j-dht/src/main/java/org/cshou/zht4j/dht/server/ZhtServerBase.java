@@ -7,11 +7,14 @@ package org.cshou.zht4j.dht.server;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.cshou.zht4j.dht.entity.DataWrapper;
 import org.cshou.zht4j.dht.entity.DefaultContext;
 import org.cshou.zht4j.dht.entity.StorePolicy;
 import org.cshou.zht4j.dht.entity.ZhtEntity;
@@ -22,6 +25,7 @@ import org.cshou.zht4j.dht.intl.ObjectContext;
 import org.cshou.zht4j.dht.intl.ZhtServer;
 import org.cshou.zht4j.dht.membership.ZhtLocator;
 import org.cshou.zht4j.dht.service.ZhtService;
+import org.cshou.zht4j.dht.util.GlobalRegistry;
 import org.cshou.zht4j.dht.util.Naming;
 import org.cshou.zht4j.persistent.entity.DBEntity;
 import org.cshou.zht4j.persistent.impl.SimpleDB;
@@ -59,7 +63,7 @@ public class ZhtServerBase implements ZhtServer {
 		
 		System.out.println("========= debug: Service Name: " + serviceName);
 		
-		Registry svcReg = LocateRegistry.createRegistry(Naming.getRegPort());
+		Registry svcReg = GlobalRegistry.getRegistry();
 		
 		// InfoHandler infoHandler = new InfoHandlerBase ();
 		
@@ -84,6 +88,12 @@ public class ZhtServerBase implements ZhtServer {
 		if (context == null)
 			context = new DefaultContext();
 		
+		// if the key already exists, then increase vector clock
+		ZhtEntity local = (ZhtEntity) storage.get(key);
+		if (local != null) {
+			context.setVectorClock(context.getVectorClock() + 1);
+		}
+		
 		ZhtEntity entity = new ZhtEntity(key, object, context);
 		
 		// single node test
@@ -96,28 +106,35 @@ public class ZhtServerBase implements ZhtServer {
 
 	public int put (String key, Object object, ObjectContext context, StorePolicy strategy) {
 		
-		int res = put (key, object, context);
+		int res = 1;
 		
-		// TODO replicate object
 		try {
 			
-			// String current = InetAddress.getLocalHost().getHostAddress();
+			if (this.serviceName.equals(locator.getOriginPos(key))) {
 			
-			// single node test
-			String current = this.serviceName;
-			
-			List<String> follower = locator.getFollowers(current);
-			
-			// single node test
-			System.out.println("========= debug: Followers: " + follower);
-			
-			int reps = strategy.getNumOfReplica();
-			
-			for (int i = 0; i < follower.size() && i <= reps; i++) {
+				res = put (key, object, context);
 				
-				// TODO invoke a transfer task
-				new ReplicateTask(follower.get(i), key, object, context).run();
+				String current = this.serviceName;
 				
+				List<String> follower = locator.getFollowers(current);
+				
+				// single node test
+				System.out.println("========= debug: Followers: " + follower);
+				
+				int reps = strategy.getNumOfReplica();
+				
+				for (int i = 0; i < follower.size() && i <= reps; i++) {
+					
+					// invoke a transfer task
+					new ReplicateTask(follower.get(i), key, object, context).run();
+					
+				}
+			}
+			else {
+				
+				String pos = locator.getOriginPos(key);
+				DataHandler dataHandler = (DataHandler) getHandler (pos, Naming.getDataService(pos));
+				dataHandler.receiveObject(new DataWrapper(key, object, context), strategy);
 			}
 			
 		} catch (Exception e) {
@@ -126,12 +143,58 @@ public class ZhtServerBase implements ZhtServer {
 		
 		return res;
 	}
-
-	public ZhtEntity get (String key) {
+	
+	public ZhtEntity getReplica (String key) {
 		
 		ZhtEntity entity = (ZhtEntity) storage.get(key);
 		
 		return entity;
+	}
+
+	public ZhtEntity get (String key) {
+		
+		List<ZhtEntity> candidates = new ArrayList<ZhtEntity>();
+		
+		ZhtEntity init = (ZhtEntity) storage.get(key);
+		
+		if (init != null)
+			candidates.add(init);
+		
+		try {
+			
+			String current = this.serviceName;
+			
+			List<String> follower = locator.getFollowers(current);
+			
+			for (int i = 0; i < follower.size(); i++) {
+				
+				DataHandler dataHandler = (DataHandler) getHandler (follower.get(i), Naming.getDataService(follower.get(i)));
+				ZhtEntity e = dataHandler.getReplica(key);
+				
+				if (e != null)
+					candidates.add(e);
+				
+			}
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		if (candidates.size() == 0)
+			return null;
+		
+		long recent = Long.MIN_VALUE;
+		ZhtEntity res = null;
+		
+		for (ZhtEntity entity : candidates) {
+			if (entity.getContext().getVectorClock() > recent) {
+				recent = entity.getContext().getVectorClock();
+				res = entity;
+			}
+		}
+		
+		return res;
 	}
 
 	public int remove (String key) {
@@ -139,6 +202,21 @@ public class ZhtServerBase implements ZhtServer {
 		int res = storage.remove(key);
 		
 		return res;
+	}
+	
+	private Remote getHandler (String hostaddress, String service) throws Exception {
+		
+		Registry svcReg = LocateRegistry.getRegistry(hostaddress, Naming.getRegPort());
+		return svcReg.lookup(service);
+		
+	}
+
+	public int migrate(String key, Object object, ObjectContext context,
+			StorePolicy strategy, String target) {
+		
+		// not implemented
+		
+		return 0;
 	}
 
 }

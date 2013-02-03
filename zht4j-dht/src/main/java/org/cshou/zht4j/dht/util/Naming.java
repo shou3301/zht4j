@@ -15,7 +15,6 @@ public class Naming {
 	private static final int REG_PORT = 6668;
 	private static final int INFO_PORT = 6666;
 	private static final int DATA_PORT = 6667;
-	private static final int MEMBER_REG_PORT = 6669;
 	private static final int MEMBER_SVC_PORT = 6700;
 	
 	public static String getDataService (String prefix) {
@@ -44,10 +43,6 @@ public class Naming {
 
 	public static int getMemberSvcPort() {
 		return MEMBER_SVC_PORT;
-	}
-	
-	public static int getMemberRegPort() {
-		return MEMBER_REG_PORT;
 	}
 	
 }

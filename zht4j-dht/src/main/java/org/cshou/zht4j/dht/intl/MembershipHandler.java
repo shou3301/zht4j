@@ -17,4 +17,6 @@ public interface MembershipHandler extends Remote {
 	
 	public int update (int index, String member) throws RemoteException, NotBoundException;
 	
+	public int setMemberList (String[] members) throws RemoteException, NotBoundException;
+	
 }

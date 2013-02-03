@@ -23,6 +23,7 @@ public class DefaultContext extends ObjectContext {
 		this.extraInfo = extraInfo;
 	}
 
+	@Override
 	public long getVectorClock() {
 		return vectorClock;
 	}

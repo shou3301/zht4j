@@ -81,6 +81,15 @@ public class ZhtService {
 					String key = params[1];
 					System.out.println(clientRunnable.get(key));
 				}
+				else if (input.startsWith("join")) {
+					String[] params = input.split(" ");
+					if (params.length != 2) {
+						System.out.println("Wrong input format!");
+						continue;
+					}
+					String member = params[1];
+					memberManagerRunnable.addMember(member);
+				}
 				else {
 					System.out.println("Please input correct command! \n");
 				}

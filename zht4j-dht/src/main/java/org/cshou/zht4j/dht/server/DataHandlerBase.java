@@ -57,26 +57,30 @@ public class DataHandlerBase extends UnicastRemoteObject implements DataHandler 
 		
 		return entity.getObject();
 	}
+	
+	public Object getObject (String key, ObjectContext context) throws RemoteException,
+			NotBoundException {
 
-	public int receiveObject (DataWrapper object, ObjectContext context,
-			StorePolicy strategy) throws RemoteException, NotBoundException {
+		ZhtEntity entity = server.get(key);
+
+		if (entity == null) {
+			context = null;
+			return null;
+		}
 		
-		server.put(object.getKey(), object.getObject(), context, strategy);
-		
-		return 0;
+		context = entity.getContext();
+
+		return entity.getObject();
 	}
 
-	public Object getObject (String key, ObjectContext context)
-			throws RemoteException, NotBoundException {
+	public ZhtEntity getReplica (String key) throws RemoteException, NotBoundException {
 		
-		ZhtEntity entity = server.get(key);
+		ZhtEntity entity = server.getReplica(key);
 		
 		if (entity == null)
 			return null;
 		
-		context = entity.getContext();
-		
-		return entity.getObject();
+		return entity;
 
 	}
 
@@ -85,6 +89,14 @@ public class DataHandlerBase extends UnicastRemoteObject implements DataHandler 
 		
 		return server.remove(key);
 
+	}
+
+	public int migrateObject(String key, String destination)
+			throws RemoteException, NotBoundException {
+
+		// not implemented
+		
+		return 0;
 	}
 
 }
