@@ -110,7 +110,12 @@ public class ZhtServerBase implements ZhtServer {
 		
 		try {
 			
-			if (this.serviceName.equals(locator.getOriginPos(key))) {
+			// for member test
+			System.out.println("Should be hashed to: " + locator.getOriginPos(key));
+			
+			String shoudAt = locator.getOriginPos(key);
+			
+			if (shoudAt == null || (serviceName.equals(shoudAt))) {
 			
 				res = put (key, object, context);
 				
@@ -132,8 +137,12 @@ public class ZhtServerBase implements ZhtServer {
 			}
 			else {
 				
-				String pos = locator.getOriginPos(key);
-				DataHandler dataHandler = (DataHandler) getHandler (pos, Naming.getDataService(pos));
+				shoudAt = locator.getOriginPos(key);
+				
+				// for member test
+				System.out.println("Transferring to : " + shoudAt);
+				
+				DataHandler dataHandler = (DataHandler) getHandler (shoudAt, Naming.getDataService(shoudAt));
 				dataHandler.receiveObject(new DataWrapper(key, object, context), strategy);
 			}
 			

@@ -16,18 +16,18 @@
  */
 package org.cshou.zht4j.persistent.impl;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.cshou.zht4j.persistent.entity.DBDescriptor;
 import org.cshou.zht4j.persistent.entity.DBEntity;
@@ -78,9 +78,15 @@ public class PersistTask extends TimerTask {
 		
 		File dbFile = simpleDB.getDbDescriptor().getDbFile();
 		
+		File logFile = simpleDB.getOpLog();
+		
+		RandomAccessFile dbfile = null;
+		
+		BufferedWriter output = null;
+		
 		try {
 			
-			RandomAccessFile file = new RandomAccessFile(dbFile, "rw");
+			dbfile = new RandomAccessFile(dbFile, "rw");
 			
 			for (String key : copyOfMem.keySet()) {
 				
@@ -106,8 +112,8 @@ public class PersistTask extends TimerTask {
 				
 					if (dbPointers.containsKey(key)) {
 						// TODO update file at certain offset
-						file.seek(dbDescriptor.getKeyOffset(key));
-						file.write(finalBytes);
+						dbfile.seek(dbDescriptor.getKeyOffset(key));
+						dbfile.write(finalBytes);
 						KeyPointer kp = new KeyPointer(dbDescriptor.getKeyOffset(key), valBytes.length);
 						dbPointers.put(key, kp);
 						
@@ -124,8 +130,8 @@ public class PersistTask extends TimerTask {
 							temp = MAX_LENGTH;
 						}
 						
-						file.seek(nextSlot);
-						file.write(finalBytes);
+						dbfile.seek(nextSlot);
+						dbfile.write(finalBytes);
 						KeyPointer kp = new KeyPointer(nextSlot, valBytes.length);
 						dbPointers.put(key, kp);
 						
@@ -153,10 +159,30 @@ public class PersistTask extends TimerTask {
 			
 			dbDescriptor.setEndOfFile(eof);
 			
-			file.close();
+			// persist log file
+			output = new BufferedWriter(new FileWriter(logFile, true));
+			
+			for (Map.Entry<String, KeyPointer> e : dbPointers.entrySet()) {
+				StringBuilder sb = new StringBuilder();
+				sb.append(e.getValue().getOffset() + "\t");
+				sb.append(e.getKey() + "\t");
+				sb.append(e.getValue().getLength());
+				output.append(sb);
+				output.newLine();
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+		finally {
+			
+			try {
+				if (dbfile != null) dbfile.close();
+				if (output != null) output.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
 		}
 		
 	}

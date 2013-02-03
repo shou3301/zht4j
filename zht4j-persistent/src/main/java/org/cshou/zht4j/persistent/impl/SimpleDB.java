@@ -47,6 +47,11 @@ public class SimpleDB implements PersistentStorage {
 	private static final String defaultDBFile = "simpledb/storage.db";
 	
 	/**
+	 * the default path to operation log
+	 */
+	private static final String defaultOpLog = "simpledb/opertaion.log";
+	
+	/**
 	 * the default frequency to execute persist task
 	 */
 	private static final long defaultFreq = 600000L;
@@ -77,6 +82,11 @@ public class SimpleDB implements PersistentStorage {
 	 */
 	protected String dbFileName;
 	protected File dbFile;
+	
+	/**
+	 * operation log file
+	 */
+	protected File logFile;
 	
 	/**
 	 * the capacity of cache
@@ -129,10 +139,17 @@ public class SimpleDB implements PersistentStorage {
 		lru = new ConcurrentLinkedQueue<TimeRecord>();
 		
 		try {
+			
 			dbFile = new File(dbFileName);
 			if (dbFile.exists())
 				dbFile.delete();
 			dbFile.createNewFile();
+			
+			logFile = new File(defaultOpLog);
+			if (logFile.exists())
+				logFile.delete();
+			logFile.createNewFile();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -189,15 +206,18 @@ public class SimpleDB implements PersistentStorage {
 	public DBEntity get (String key) {
 		
 		boolean inCache = true;
+		boolean inDisk = true;
 		
 		DBEntity entity = searchMem(key);
 		
 		if (entity == null) {
 			entity = searchDisk(key);
 			inCache = false;
+			if (entity == null)
+				inDisk = false;
 		}
 		
-		if (!inCache) {
+		if (!inCache && inDisk) {
 			
 			evictionLock.lock();
 			try {
@@ -268,6 +288,9 @@ public class SimpleDB implements PersistentStorage {
 		
 		DBEntity entity = null;
 		
+		if (!dbDescriptor.containsKey(key))
+			return entity;
+		
 		try {
 			
 			RandomAccessFile file = new RandomAccessFile(dbFile, "r");
@@ -321,6 +344,10 @@ public class SimpleDB implements PersistentStorage {
 	
 	public Lock getEvictionLock () {
 		return this.evictionLock;
+	}
+	
+	public File getOpLog () {
+		return this.logFile;
 	}
 	
 }

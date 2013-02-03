@@ -65,9 +65,7 @@ public class MembershipManager implements Runnable {
 		
 		memberLock = new TrafficLock();
 		
-		// TODO register service 
 		Registry svcReg = GlobalRegistry.getRegistry();
-		//Registry svcReg = LocateRegistry.createRegistry(Naming.getRegPort());
 		MembershipHandler memberService = new MembershipHandlerBase(Naming.getMemberSvcPort(), this);
 		svcReg.rebind(Naming.getMemberService(this.serviceName), memberService);
 	}
@@ -232,8 +230,8 @@ public class MembershipManager implements Runnable {
 			
 			int neighbor = findNeighbor();
 			
-			new UpdateMemberTask((MembershipHandler) getHandler(members[neighbor], Naming.getMemberService(members[neighbor])),
-					index, member).run();
+			//new UpdateMemberTask((MembershipHandler) getHandler(members[neighbor], Naming.getMemberService(members[neighbor])),
+			//		index, member).run();
 			
 			// for member test
 			System.out.println("Memberlist: " + Arrays.asList(members));

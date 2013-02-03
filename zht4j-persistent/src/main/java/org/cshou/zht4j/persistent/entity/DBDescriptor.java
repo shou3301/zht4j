@@ -74,6 +74,10 @@ public class DBDescriptor {
 		availableTable.add(offset);
 	}
 	
+	public boolean containsKey(String key) {
+		return dbPointers.containsKey(key);
+	}
+	
 	public long getNextSlot () {
 		if (!availableTable.isEmpty()) {
 			return availableTable.poll();
